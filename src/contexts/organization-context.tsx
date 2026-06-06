@@ -17,7 +17,7 @@ interface OrganizationContextType {
 	activeOrgId: number | null;
 	setActiveOrgId: (id: number | null) => void;
 	isLoading: boolean;
-	createOrg: (name: string) => Promise<any>;
+	createOrg: (name: string) => Promise<{ id: number; name: string }>;
 	isCreating: boolean;
 }
 
@@ -26,7 +26,13 @@ const OrganizationContext = createContext<OrganizationContextType | null>(null);
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
 	const { data: session } = useSession();
 	const queryClient = useQueryClient();
-	const [activeOrgId, setActiveOrgIdState] = useState<number | null>(null);
+	const [activeOrgId, setActiveOrgIdState] = useState<number | null>(() => {
+		if (typeof window !== "undefined") {
+			const stored = localStorage.getItem("activeOrgId");
+			return stored ? parseInt(stored) : null;
+		}
+		return null;
+	});
 
 	const { data: organizations = [], isLoading } = useQuery({
 		queryKey: ["organizations"],
@@ -42,23 +48,24 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 		enabled: !!session,
 	});
 
-	// Initialize activeOrgId from localStorage or default to the first organization
+	// Initialize activeOrgId if not set and organizations are available
 	useEffect(() => {
-		if (organizations.length > 0) {
+		if (organizations.length > 0 && activeOrgId === null) {
 			const stored = localStorage.getItem("activeOrgId");
 			const storedId = stored ? parseInt(stored) : null;
 			
 			const exists = storedId !== null && organizations.some(o => o.id === storedId);
 			if (exists) {
-				setActiveOrgIdState(storedId);
+				setTimeout(() => setActiveOrgIdState(storedId), 0);
 			} else {
-				setActiveOrgIdState(organizations[0].id);
-				localStorage.setItem("activeOrgId", organizations[0].id.toString());
+				const firstId = organizations[0].id;
+				setTimeout(() => setActiveOrgIdState(firstId), 0);
+				localStorage.setItem("activeOrgId", firstId.toString());
 			}
-		} else {
-			setActiveOrgIdState(null);
+		} else if (organizations.length === 0 && activeOrgId !== null) {
+			setTimeout(() => setActiveOrgIdState(null), 0);
 		}
-	}, [organizations]);
+	}, [organizations, activeOrgId]);
 
 	const setActiveOrgId = (id: number | null) => {
 		setActiveOrgIdState(id);
@@ -78,15 +85,20 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 	const createMutation = useMutation({
 		mutationFn: async (name: string) => {
 			const res = await api.org.post({ name });
-			if (res.error) {
-				throw new Error((res.error.value as any)?.error || "Failed to create organization");
+			if (res.error || !res.data?.success) {
+				const errorValue = res.error?.value as { error?: string } | undefined;
+				throw new Error(
+					errorValue?.error ||
+						(res.data as { error?: string })?.error ||
+						"Failed to create organization",
+				);
 			}
-			return res.data;
+			return res.data.data as { id: number; name: string };
 		},
-		onSuccess: (response: any) => {
+		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["organizations"] });
-			if (response && response.success && response.data) {
-				setActiveOrgId(response.data.id);
+			if (data && data.id) {
+				setActiveOrgId(data.id);
 			}
 		},
 	});

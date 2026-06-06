@@ -12,11 +12,12 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import {
 	ArrowLeft,
 	Trash2,
+	Edit2,
+	Eye,
 	UserPlus,
 	Settings,
 	Calendar,
 	Clock,
-	Play,
 	Square,
 	Plus,
 	Users,
@@ -25,7 +26,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { useOrganization } from "@/contexts/organization-context";
 import { useProjects } from "@/hooks/use-projects";
 import { useTasks } from "@/hooks/use-tasks";
 import { useOrg } from "@/hooks/use-org";
@@ -70,6 +70,7 @@ interface TaskAssignee {
 	id: number;
 	name: string | null;
 	email: string;
+	image?: string | null;
 }
 
 interface Task {
@@ -88,6 +89,7 @@ interface ProjectMember {
 	id: number;
 	name: string | null;
 	email: string;
+	image?: string | null;
 	role: string;
 }
 
@@ -143,9 +145,12 @@ const KANBAN_COLUMNS: {
 interface DraggableTaskCardProps {
 	task: Task;
 	onOpen: (taskId: number) => void;
+	onEdit: (task: Task) => void;
+	onDelete: (taskId: number) => void;
+	canEdit?: boolean;
 }
 
-function DraggableTaskCard({ task, onOpen }: DraggableTaskCardProps) {
+function DraggableTaskCard({ task, onOpen, onEdit, onDelete, canEdit }: DraggableTaskCardProps) {
 	const { attributes, listeners, setNodeRef, transform, isDragging } =
 		useDraggable({
 			id: task.id,
@@ -160,25 +165,24 @@ function DraggableTaskCard({ task, onOpen }: DraggableTaskCardProps) {
 		<div
 			ref={setNodeRef}
 			style={style}
-			{...listeners}
-			{...attributes}
-			onClick={() => onOpen(task.id)}
-			className={`p-3 bg-card border border-border rounded-xl space-y-2 cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 select-none ${
+			className={`p-3 bg-card border border-border rounded-xl space-y-2 cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 select-none group relative ${
 				isDragging ? "opacity-40 ring-2 ring-primary/40" : ""
 			}`}
 		>
 			<div className="flex items-start justify-between gap-2">
-				<span className="text-xs font-semibold leading-snug flex-1 min-w-0 break-words">
+				<span className="text-xs font-semibold leading-snug flex-1 min-w-0 break-words" {...listeners} {...attributes}>
 					{task.title}
 				</span>
-				<TaskPriorityBadge priority={task.priority} />
+				<div className="flex flex-col items-end gap-1 shrink-0">
+					<TaskPriorityBadge priority={task.priority} />
+				</div>
 			</div>
 			{task.description && (
-				<p className="text-[10px] text-muted-foreground line-clamp-2">
+				<p className="text-[10px] text-muted-foreground line-clamp-2" {...listeners} {...attributes}>
 					{task.description}
 				</p>
 			)}
-			<div className="flex items-center justify-between">
+			<div className="flex items-center justify-between" {...listeners} {...attributes}>
 				<TaskStatusBadge status={task.status} />
 				{task.assignees && task.assignees.length > 0 && (
 					<div className="flex -space-x-1 overflow-hidden">
@@ -187,6 +191,7 @@ function DraggableTaskCard({ task, onOpen }: DraggableTaskCardProps) {
 								key={a.id}
 								name={a.name}
 								email={a.email}
+								image={a.image}
 								size="xs"
 								className="border border-card"
 							/>
@@ -194,6 +199,52 @@ function DraggableTaskCard({ task, onOpen }: DraggableTaskCardProps) {
 					</div>
 				)}
 			</div>
+
+			{/* Action Overlay (Visible on Hover) */}
+			{!isDragging && (
+				<div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-card/80 backdrop-blur-sm p-0.5 rounded-lg border border-border/50 shadow-sm">
+					<Button
+						variant="ghost"
+						size="icon-xs"
+						className="size-6 text-muted-foreground hover:text-primary"
+						onClick={(e) => {
+							e.stopPropagation();
+							onOpen(task.id);
+						}}
+						title="View Task"
+					>
+						<Eye className="size-3" />
+					</Button>
+					{canEdit && (
+						<>
+							<Button
+								variant="ghost"
+								size="icon-xs"
+								className="size-6 text-muted-foreground hover:text-primary"
+								onClick={(e) => {
+									e.stopPropagation();
+									onEdit(task);
+								}}
+								title="Edit Task"
+							>
+								<Edit2 className="size-3" />
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon-xs"
+								className="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+								onClick={(e) => {
+									e.stopPropagation();
+									onDelete(task.id);
+								}}
+								title="Delete Task"
+							>
+								<Trash2 className="size-3" />
+							</Button>
+						</>
+					)}
+				</div>
+			)}
 		</div>
 	);
 }
@@ -208,6 +259,9 @@ interface DroppableColumnProps {
 	tasks: Task[];
 	isTasksLoading: boolean;
 	onOpenTask: (taskId: number) => void;
+	onEditTask: (task: Task) => void;
+	onDeleteTask: (taskId: number) => void;
+	canEdit?: boolean;
 	isOver?: boolean;
 }
 
@@ -218,6 +272,9 @@ function DroppableColumn({
 	tasks,
 	isTasksLoading,
 	onOpenTask,
+	onEditTask,
+	onDeleteTask,
+	canEdit,
 }: DroppableColumnProps) {
 	const { setNodeRef, isOver } = useDroppable({ id: columnId });
 
@@ -259,6 +316,9 @@ function DroppableColumn({
 								key={task.id}
 								task={task}
 								onOpen={onOpenTask}
+								onEdit={onEditTask}
+								onDelete={onDeleteTask}
+								canEdit={canEdit}
 							/>
 						))
 					)}
@@ -297,6 +357,7 @@ function DragOverlayCard({ task }: DragOverlayCardProps) {
 								key={a.id}
 								name={a.name}
 								email={a.email}
+								image={a.image}
 								size="xs"
 								className="border border-card"
 							/>
@@ -313,13 +374,16 @@ function DragOverlayCard({ task }: DragOverlayCardProps) {
 function ProjectDetailsContent() {
 	const searchParams = useSearchParams();
 	const projectId = parseInt(searchParams.get("id") || "");
-	const { activeOrgId } = useOrganization();
 	const setHeaderData = useSetHeader();
 
 	// Modal States
 	const [showAddMemberModal, setShowAddMemberModal] = useState(false);
 	const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+	const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+	const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 	const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+	const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
+	const [showDeleteTaskConfirm, setShowDeleteTaskConfirm] = useState(false);
 	const [memberToRemove, setMemberToRemove] = useState<{
 		id: number;
 		nameOrEmail: string;
@@ -341,7 +405,7 @@ function ProjectDetailsContent() {
 		tasksQuery,
 		activeTimerQuery,
 		updateTaskMutation,
-		startTimerMutation,
+		deleteTaskMutation,
 		stopTimerMutation,
 	} = useTasks(isNaN(projectId) ? {} : { projectId });
 
@@ -364,28 +428,29 @@ function ProjectDetailsContent() {
 	const unassignedOrgMembers = orgMembers.filter(
 		(om) => !projectMembersList.some((m) => m.id === om.id),
 	);
+// Timer ticker
+const [now, setNow] = useState<number>(0);
 
-	// Timer ticker
-	const [timerSeconds, setTimerSeconds] = useState(0);
-	useEffect(() => {
-		let interval: NodeJS.Timeout;
-		if (activeTimer) {
-			const start = new Date(activeTimer.startTime).getTime();
-			const update = () => {
-				const diff = Math.max(
-					0,
-					Math.floor((Date.now() - start) / 1000),
-				);
-				setTimerSeconds(diff);
-			};
-			update();
-			interval = setInterval(update, 1000);
-		} else {
-			setTimerSeconds(0);
-		}
-		return () => clearInterval(interval);
-	}, [activeTimer]);
+useEffect(() => {
+	const timeout = setTimeout(() => setNow(Date.now()), 0);
+	return () => clearTimeout(timeout);
+}, []);
 
+useEffect(() => {
+	if (!activeTimer) return;
+
+	const interval = setInterval(() => {
+		setNow(Date.now());
+	}, 1000);
+
+	return () => clearInterval(interval);
+}, [activeTimer]);
+
+const timerSeconds = activeTimer 
+	? Math.max(0, Math.floor((now - new Date(activeTimer.startTime).getTime()) / 1000))
+	: 0;
+
+// Header
 	const formatDuration = (sec: number) => {
 		const h = Math.floor(sec / 3600);
 		const m = Math.floor((sec % 3600) / 60);
@@ -452,12 +517,10 @@ function ProjectDetailsContent() {
 		return () => setHeaderData(null);
 	}, [
 		setHeaderData,
-		projectData?.project?.name,
-		projectData?.project?.status,
-		activeTimer?.taskId,
-		activeTimer?.taskTitle,
+		projectData,
+		activeTimer,
 		timerSeconds,
-		stopTimerMutation.mutate,
+		stopTimerMutation,
 		projectId,
 	]);
 
@@ -719,6 +782,15 @@ function ProjectDetailsContent() {
 											onOpenTask={(taskId) =>
 												setSelectedTaskId(taskId)
 											}
+											onEditTask={(task) => {
+												setTaskToEdit(task);
+												setShowEditTaskModal(true);
+											}}
+											onDeleteTask={(taskId) => {
+												setTaskToDelete(taskId);
+												setShowDeleteTaskConfirm(true);
+											}}
+											canEdit={canEdit}
 										/>
 									);
 								})}
@@ -864,45 +936,24 @@ function ProjectDetailsContent() {
 			/>
 
 			{/* ── Add Member Modal ──────────────────────────────────────────── */}
-			<Dialog
-				open={showAddMemberModal}
-				onOpenChange={setShowAddMemberModal}
-			>
-				<DialogContent className="max-w-md">
-					<DialogHeader>
-						<DialogTitle>Assign Team Member</DialogTitle>
-						<DialogDescription>
-							Choose a member from your organization workspace to
-							assign to this project.
-						</DialogDescription>
-					</DialogHeader>
-					<ProjectMemberAssignForm
-						projectId={projectId}
-						unassignedMembers={unassignedOrgMembers}
-						onSuccess={() => setShowAddMemberModal(false)}
-						onCancel={() => setShowAddMemberModal(false)}
-					/>
-				</DialogContent>
+			<Dialog open={showAddMemberModal} onOpenChange={setShowAddMemberModal}>
+				<ProjectMemberAssignForm
+					projectId={projectId}
+					unassignedMembers={unassignedOrgMembers}
+					onSuccess={() => setShowAddMemberModal(false)}
+					onCancel={() => setShowAddMemberModal(false)}
+				/>
 			</Dialog>
 
 			{/* ── Create Task Modal ─────────────────────────────────────────── */}
 			<Dialog open={showNewTaskModal} onOpenChange={setShowNewTaskModal}>
-				<DialogContent className="max-w-md">
-					<DialogHeader>
-						<DialogTitle>Create Task</DialogTitle>
-						<DialogDescription>
-							Add a task item with status and multiple assignee
-							options.
-						</DialogDescription>
-					</DialogHeader>
-					<TaskCreateForm
-						projects={[{ id: projectId, name: project.name }]}
-						members={members}
-						fixedProjectId={projectId}
-						onSuccess={() => setShowNewTaskModal(false)}
-						onCancel={() => setShowNewTaskModal(false)}
-					/>
-				</DialogContent>
+				<TaskCreateForm
+					projects={[{ id: projectId, name: project.name }]}
+					members={members}
+					fixedProjectId={projectId}
+					onSuccess={() => setShowNewTaskModal(false)}
+					onCancel={() => setShowNewTaskModal(false)}
+				/>
 			</Dialog>
 
 			{/* ── Remove Member Confirm ─────────────────────────────────────── */}
@@ -944,6 +995,73 @@ function ProjectDetailsContent() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			{/* ── Edit Task Modal ───────────────────────────────────────────── */}
+			{taskToEdit && (
+				<Dialog open={showEditTaskModal} onOpenChange={setShowEditTaskModal}>
+					<TaskCreateForm
+						projects={[{ id: projectId, name: project.name }]}
+						members={members}
+						fixedProjectId={projectId}
+						initialData={{
+							...taskToEdit,
+							assignees: taskToEdit.assignees?.map(a => a.id),
+							dueDate: taskToEdit.dueDate ? new Date(taskToEdit.dueDate).toISOString().split('T')[0] : ""
+						}}
+						onSuccess={() => {
+							setShowEditTaskModal(false);
+							setTaskToEdit(null);
+							tasksQuery.refetch();
+						}}
+						onCancel={() => {
+							setShowEditTaskModal(false);
+							setTaskToEdit(null);
+						}}
+					/>
+				</Dialog>
+			)}
+
+			{/* ── Delete Task Confirm ────────────────────────────────────────── */}
+			<Dialog
+				open={showDeleteTaskConfirm}
+				onOpenChange={(open) => !open && setShowDeleteTaskConfirm(false)}
+			>
+				<DialogContent className="max-w-md rounded-3xl p-6">
+					<DialogHeader>
+						<DialogTitle className="text-lg font-bold">
+							Delete Task
+						</DialogTitle>
+						<DialogDescription className="text-xs text-muted-foreground font-light mt-1">
+							Are you sure you want to delete this task? This action cannot be undone.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
+						<Button
+							variant="ghost"
+							onClick={() => setShowDeleteTaskConfirm(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							disabled={deleteTaskMutation.isPending}
+							onClick={() => {
+								if (taskToDelete !== null) {
+									deleteTaskMutation.mutate(taskToDelete, {
+										onSuccess: () => {
+											setShowDeleteTaskConfirm(false);
+											setTaskToDelete(null);
+											tasksQuery.refetch();
+										}
+									});
+								}
+							}}
+						>
+							{deleteTaskMutation.isPending ? "Deleting..." : "Delete"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
@@ -963,3 +1081,4 @@ export default function ProjectDetailsPage() {
 		</Suspense>
 	);
 }
+

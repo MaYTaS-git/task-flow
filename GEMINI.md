@@ -6,6 +6,8 @@
 
 ## Never use Any type anywhere strictly
 
+## Give priority to shadcn components over native and custom ones, always look in the src/components/ui dir for all available components.
+
 ## Maintain UI Uniformity strictly, avoid over-designing, let the theme and shadcn handle the designing
 
 ## Maintain Code Quality strictly

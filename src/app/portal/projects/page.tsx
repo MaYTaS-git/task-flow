@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
 	Card,
-	CardContent,
 	CardFooter,
 	CardHeader,
 	CardTitle,
@@ -32,6 +31,7 @@ import {
 } from "@/components/ui/card";
 import { ProjectStatusBadge } from "@/components/common/status-badge";
 import { ProjectCreateForm } from "@/components/forms/project-create-form";
+import { Progress } from "@/components/ui/progress";
 
 interface Project {
 	id: number;
@@ -39,6 +39,8 @@ interface Project {
 	description: string | null;
 	status: string;
 	createdAt: string;
+	totalTasks?: number;
+	doneTasks?: number;
 }
 
 const PROJECT_STATUSES = [
@@ -201,6 +203,31 @@ export default function ProjectsPage() {
 											{project.description ||
 												"No description provided."}
 										</CardDescription>
+
+										{/* Progress Section */}
+										<div className="mt-4 space-y-2">
+											<div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+												<span className="text-muted-foreground">
+													Progress
+												</span>
+												<span className="text-primary">
+													{project.doneTasks || 0} /{" "}
+													{project.totalTasks || 0}{" "}
+													Tasks
+												</span>
+											</div>
+											<Progress
+												value={
+													project.totalTasks
+														? ((project.doneTasks ||
+																0) /
+																project.totalTasks) *
+														  100
+														: 0
+												}
+												className="h-1.5"
+											/>
+										</div>
 									</CardHeader>
 
 									<CardFooter className="flex items-center justify-between">
@@ -236,21 +263,10 @@ export default function ProjectsPage() {
 				open={showNewProjectModal}
 				onOpenChange={setShowNewProjectModal}
 			>
-				<DialogContent className="max-w-md rounded-3xl">
-					<DialogHeader>
-						<DialogTitle className="text-lg font-bold">
-							Create Project
-						</DialogTitle>
-						<DialogDescription className="text-xs text-muted-foreground font-light mt-1">
-							Add a project space to categorize tasks and
-							configure member boards.
-						</DialogDescription>
-					</DialogHeader>
-					<ProjectCreateForm
-						onSuccess={() => setShowNewProjectModal(false)}
-						onCancel={() => setShowNewProjectModal(false)}
-					/>
-				</DialogContent>
+				<ProjectCreateForm
+					onSuccess={() => setShowNewProjectModal(false)}
+					onCancel={() => setShowNewProjectModal(false)}
+				/>
 			</Dialog>
 
 			{/* Delete Project Dialog */}

@@ -110,6 +110,7 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 					id: users.id,
 					name: users.name,
 					email: users.email,
+					image: users.image,
 					role: organizationMembers.role,
 					permissions: organizationMembers.permissions,
 				})
@@ -311,6 +312,43 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 				return { success: false, error: "Cannot remove yourself from the organization" };
 			}
 
+			// 1. Find all projects in this organization
+			const orgProjects = await db
+				.select({ id: projects.id })
+				.from(projects)
+				.where(eq(projects.organizationId, orgId));
+			
+			// 2. Clean up project-related data for this user
+			for (const project of orgProjects) {
+				// Remove from project members
+				await db
+					.delete(projectMembers)
+					.where(
+						and(
+							eq(projectMembers.projectId, project.id),
+							eq(projectMembers.userId, targetUserId)
+						)
+					);
+				
+				// Remove from task assignments in this project
+				const projectTasks = await db
+					.select({ id: tasks.id })
+					.from(tasks)
+					.where(eq(tasks.projectId, project.id));
+				
+				for (const task of projectTasks) {
+					await db
+						.delete(taskAssignees)
+						.where(
+							and(
+								eq(taskAssignees.taskId, task.id),
+								eq(taskAssignees.userId, targetUserId)
+							)
+						);
+				}
+			}
+
+			// 3. Remove from organization members
 			await db
 				.delete(organizationMembers)
 				.where(

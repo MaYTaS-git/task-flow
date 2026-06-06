@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
-import { eq, and } from "drizzle-orm";
-import { db, projects, projectMembers, organizationMembers, users } from "@/lib/db";
+import { eq, and, sql } from "drizzle-orm";
+import { db, projects, projectMembers, organizationMembers, users, tasks } from "@/lib/db";
 import { getAuthenticatedUser, checkOrgAccess, checkProjectAccess } from "../auth-helper";
 
 export const projectRoutes = new Elysia({ prefix: "/projects" })
@@ -18,6 +18,9 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 			const orgAccess = await checkOrgAccess(user.id, orgId);
 			const status = query.status;
 
+			const totalTasksSubquery = sql<number>`(SELECT count(*) FROM ${tasks} WHERE ${tasks.projectId} = ${projects.id})`.mapWith(Number);
+			const doneTasksSubquery = sql<number>`(SELECT count(*) FROM ${tasks} WHERE ${tasks.projectId} = ${projects.id} AND ${tasks.status} = 'done')`.mapWith(Number);
+
 			if (orgAccess.role === "ADMIN" || orgAccess.role === "SUPER_ADMIN") {
 				// Admins/Super Admins see all projects in the organization
 				const conditions = [eq(projects.organizationId, orgId)];
@@ -25,7 +28,16 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 					conditions.push(eq(projects.status, status));
 				}
 				const allProjects = await db
-					.select()
+					.select({
+						id: projects.id,
+						name: projects.name,
+						description: projects.description,
+						organizationId: projects.organizationId,
+						status: projects.status,
+						createdAt: projects.createdAt,
+						totalTasks: totalTasksSubquery,
+						doneTasks: doneTasksSubquery,
+					})
 					.from(projects)
 					.where(and(...conditions));
 				return allProjects;
@@ -46,6 +58,8 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 						organizationId: projects.organizationId,
 						status: projects.status,
 						createdAt: projects.createdAt,
+						totalTasks: totalTasksSubquery,
+						doneTasks: doneTasksSubquery,
 					})
 					.from(projectMembers)
 					.innerJoin(projects, eq(projectMembers.projectId, projects.id))
@@ -60,6 +74,48 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 		query: t.Object({
 			orgId: t.String(),
 			status: t.Optional(t.String()),
+		}),
+	})
+
+	// Get all projects for a specific user in an organization
+	.get("/user/:userId", async ({ params, query, set }) => {
+		const user = await getAuthenticatedUser();
+		const orgId = parseInt(query.orgId || "");
+		const targetUserId = parseInt(params.userId);
+
+		if (isNaN(orgId) || isNaN(targetUserId)) {
+			set.status = 400;
+			return { success: false, error: "Invalid ID(s)" };
+		}
+
+		try {
+			await checkOrgAccess(user.id, orgId);
+
+			const userProjects = await db
+				.select({
+					id: projects.id,
+					name: projects.name,
+					description: projects.description,
+					status: projects.status,
+					createdAt: projects.createdAt,
+				})
+				.from(projectMembers)
+				.innerJoin(projects, eq(projectMembers.projectId, projects.id))
+				.where(
+					and(
+						eq(projects.organizationId, orgId),
+						eq(projectMembers.userId, targetUserId)
+					)
+				);
+
+			return { success: true, data: userProjects };
+		} catch (err) {
+			set.status = (err as Error).message.includes("Forbidden") ? 403 : 400;
+			return { success: false, error: (err as Error).message };
+		}
+	}, {
+		query: t.Object({
+			orgId: t.String(),
 		}),
 	})
 
@@ -135,6 +191,7 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 					id: users.id,
 					name: users.name,
 					email: users.email,
+					image: users.image,
 					role: organizationMembers.role,
 				})
 				.from(projectMembers)
@@ -291,6 +348,26 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 				return { success: false, error: "Forbidden: Admin role required to manage project team" };
 			}
 
+			// 1. Remove from all task assignments in this project
+			const projectTasks = await db
+				.select({ id: tasks.id })
+				.from(tasks)
+				.where(eq(tasks.projectId, projectId));
+			
+			if (projectTasks.length > 0) {
+				for (const task of projectTasks) {
+					await db
+						.delete(taskAssignees)
+						.where(
+							and(
+								eq(taskAssignees.taskId, task.id),
+								eq(taskAssignees.userId, targetUserId)
+							)
+						);
+				}
+			}
+
+			// 2. Remove from project members
 			await db
 				.delete(projectMembers)
 				.where(

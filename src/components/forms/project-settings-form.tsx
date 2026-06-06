@@ -63,77 +63,103 @@ export function ProjectSettingsForm({
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-			<div className="space-y-2">
-				<Label htmlFor="proj-sett-name" className="text-xs font-semibold text-muted-foreground">
-					Project Title
-				</Label>
-				<Input
-					id="proj-sett-name"
-					type="text"
-					className="w-full bg-muted/20 border-border focus:border-primary text-xs rounded-xl"
-					{...register("name", { required: "Project title is required" })}
-				/>
-				{errors.name && (
-					<p className="text-xs text-destructive mt-1">{errors.name.message}</p>
-				)}
-			</div>
-
-			<div className="space-y-2">
-				<Label htmlFor="proj-sett-desc" className="text-xs font-semibold text-muted-foreground">
-					Description
-				</Label>
-				<Input
-					id="proj-sett-desc"
-					type="text"
-					className="w-full bg-muted/20 border-border focus:border-primary text-xs rounded-xl"
-					{...register("description")}
-				/>
-			</div>
-
-			<div className="space-y-2">
-				<Label htmlFor="proj-sett-status" className="text-xs font-semibold text-muted-foreground">
-					Project Status
-				</Label>
-				<Controller
-					name="status"
-					control={control}
-					render={({ field }) => (
-						<Select
-							items={[
-								{ label: "Planning", value: "planning" },
-								{ label: "Active", value: "active" },
-								{ label: "Completed", value: "completed" },
-								{ label: "On Hold", value: "on_hold" },
-							]}
-							value={field.value}
-							onValueChange={(val) => field.onChange(val || "planning")}
-						>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder="Select status..." />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="planning">Planning</SelectItem>
-								<SelectItem value="active">Active</SelectItem>
-								<SelectItem value="completed">Completed</SelectItem>
-								<SelectItem value="on_hold">On Hold</SelectItem>
-							</SelectContent>
-						</Select>
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-6">
+			<div className="space-y-4">
+				<div className="space-y-2">
+					<Label
+						htmlFor="proj-sett-name"
+						className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+					>
+						Project Title
+					</Label>
+					<Input
+						id="proj-sett-name"
+						type="text"
+						className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+						{...register("name", {
+							required: "Project title is required",
+						})}
+					/>
+					{errors.name && (
+						<p className="text-[10px] font-bold text-destructive uppercase tracking-wide ml-1">
+							{errors.name.message}
+						</p>
 					)}
-				/>
+				</div>
+
+				<div className="space-y-2">
+					<Label
+						htmlFor="proj-sett-desc"
+						className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+					>
+						Description
+					</Label>
+					<Input
+						id="proj-sett-desc"
+						type="text"
+						className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+						{...register("description")}
+					/>
+				</div>
+
+				<div className="space-y-2">
+					<Label
+						htmlFor="proj-sett-status"
+						className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+					>
+						Project Status
+					</Label>
+					<Controller
+						name="status"
+						control={control}
+						render={({ field }) => (
+							<Select
+								items={[
+									{ label: "Planning", value: "planning" },
+									{ label: "Active", value: "active" },
+									{ label: "Completed", value: "completed" },
+									{ label: "On Hold", value: "on_hold" },
+								]}
+								value={field.value}
+								onValueChange={(val) =>
+									field.onChange(val || "planning")
+								}
+							>
+								<SelectTrigger className="w-full h-11 rounded-2xl bg-muted/20 border-border px-4">
+									<SelectValue placeholder="Select status..." />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="planning">
+										Planning
+									</SelectItem>
+									<SelectItem value="active">
+										Active
+									</SelectItem>
+									<SelectItem value="completed">
+										Completed
+									</SelectItem>
+									<SelectItem value="on_hold">
+										On Hold
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						)}
+					/>
+				</div>
 			</div>
 
-			<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
+			<DialogFooter className="pt-6 border-t border-border flex gap-2 justify-end">
 				<Button
 					type="button"
 					variant="ghost"
 					onClick={onCancel}
-					className="text-muted-foreground hover:text-foreground"
+					className="text-muted-foreground hover:text-foreground rounded-2xl px-6"
 				>
 					Cancel
 				</Button>
 				<Button
 					type="submit"
+					className="rounded-2xl px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
 					disabled={updateProjectMutation.isPending || !isValid}
 				>
 					{updateProjectMutation.isPending ? (

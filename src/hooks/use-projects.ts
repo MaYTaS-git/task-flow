@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useOrganization } from "@/contexts/organization-context";
@@ -30,7 +31,7 @@ export function useProjects(projectId?: number) {
 			success: boolean;
 			data: {
 				project: { id: number; name: string; description: string | null; status: string; organizationId: number; createdAt: string };
-				members: { id: number; name: string | null; email: string; role: string }[];
+				members: { id: number; name: string | null; email: string; image: string | null; role: string }[];
 			};
 			error?: string;
 		};
@@ -111,13 +112,38 @@ export function useProjects(projectId?: number) {
 		},
 	});
 
-	return {
+	// Fetch projects for a specific user in the organization
+	const userProjectsQuery = (userId?: number) => useQuery({
+		queryKey: ["user-projects", activeOrgId, userId],
+		queryFn: async () => {
+			if (!activeOrgId || !userId) return [];
+			const res = await api.projects.user({ userId: userId.toString() }).get({ query: { orgId: activeOrgId.toString() } });
+			if (res.error || !res.data) throw new Error("Failed to fetch user projects");
+			
+			const response = res.data as unknown as { success: boolean; data: object[] };
+			if (!response.success) return [];
+			return response.data;
+		},
+		enabled: !!activeOrgId && !!userId,
+	});
+
+	return React.useMemo(() => ({
 		projectsQuery,
 		projectDetailsQuery,
+		userProjectsQuery,
 		createProjectMutation,
 		updateProjectMutation,
 		assignMemberMutation,
 		removeMemberMutation,
 		deleteProjectMutation,
-	};
+	}), [
+		projectsQuery,
+		projectDetailsQuery,
+		userProjectsQuery,
+		createProjectMutation,
+		updateProjectMutation,
+		assignMemberMutation,
+		removeMemberMutation,
+		deleteProjectMutation,
+	]);
 }

@@ -9,6 +9,14 @@ import { api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSetHeader } from "@/contexts/header-context";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 
 interface Notification {
 	id: number;
@@ -117,37 +125,57 @@ export default function NotificationsPage() {
 				</div>
 			) : (
 				<div className="bg-card border border-border rounded-3xl p-6 space-y-4">
-					<div className="divide-y divide-border">
-						{notifications.map((notif) => (
-							<div
-								key={notif.id}
-								className={`py-4 flex items-start justify-between gap-4 transition-colors ${
-									!notif.read ? "bg-primary/5 -mx-6 px-6 rounded-2xl border-l-2 border-primary" : ""
-								}`}
-							>
-								<div className="space-y-1.5 flex-1 min-w-0">
-									<div className="flex items-center gap-2 flex-wrap">
-										{getNotificationBadge(notif.type)}
-										<span className="text-[10px] text-muted-foreground font-mono">
-											{new Date(notif.createdAt).toLocaleString()}
-										</span>
-									</div>
-									<h3 className="text-sm font-bold text-foreground leading-snug">{notif.title}</h3>
-									<p className="text-xs text-muted-foreground font-light break-words">{notif.message}</p>
-								</div>
-
-								{!notif.read && (
-									<Button
-										variant="ghost"
-										size="icon-sm"
-										onClick={() => readNotificationMutation.mutate(notif.id)}
-										title="Mark as read"
+					<div className="border border-border rounded-2xl overflow-hidden">
+						<Table>
+							<TableHeader className="bg-muted/30">
+								<TableRow className="hover:bg-transparent">
+									<TableHead className="w-12"></TableHead>
+									<TableHead className="w-[180px] text-[10px] uppercase font-bold tracking-wider">Type</TableHead>
+									<TableHead className="text-[10px] uppercase font-bold tracking-wider">Message</TableHead>
+									<TableHead className="w-[180px] text-[10px] uppercase font-bold tracking-wider">Time</TableHead>
+									<TableHead className="w-12 text-right"></TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{notifications.map((notif) => (
+									<TableRow
+										key={notif.id}
+										className={!notif.read ? "bg-primary/5 hover:bg-primary/10 transition-colors" : ""}
 									>
-										<Check className="size-4 text-muted-foreground hover:text-primary" />
-									</Button>
-								)}
-							</div>
-						))}
+										<TableCell>
+											<div className={`size-2 rounded-full mx-auto ${!notif.read ? "bg-primary" : "bg-transparent"}`} />
+										</TableCell>
+										<TableCell>
+											{getNotificationBadge(notif.type)}
+										</TableCell>
+										<TableCell>
+											<div className="space-y-0.5">
+												<div className="text-sm font-bold text-foreground leading-snug">{notif.title}</div>
+												<p className="text-xs text-muted-foreground font-light break-words line-clamp-2">{notif.message}</p>
+											</div>
+										</TableCell>
+										<TableCell>
+											<span className="text-[10px] text-muted-foreground font-mono">
+												{new Date(notif.createdAt).toLocaleString()}
+											</span>
+										</TableCell>
+										<TableCell className="text-right">
+											{!notif.read && (
+												<Button
+													variant="ghost"
+													size="icon-sm"
+													className="h-8 w-8"
+													onClick={() => readNotificationMutation.mutate(notif.id)}
+													title="Mark as read"
+												>
+													<Check className="size-4 text-muted-foreground hover:text-primary" />
+												</Button>
+											)}
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
 					</div>
 				</div>
 			)}

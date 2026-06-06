@@ -36,11 +36,11 @@ export default function ProfilePage() {
 		mutationFn: async () => {
 			const res = await api.users["delete-account"].delete();
 			if (res.error) {
-				throw new Error((res.error.value as any)?.error || "Failed to delete account");
+				throw new Error((res.error.value as { error?: string })?.error || "Failed to delete account");
 			}
 			return res.data;
 		},
-		onSuccess: (data: any) => {
+		onSuccess: (data: { message?: string }) => {
 			toast.success(data.message || "Account permanently deleted.");
 			router.push("/login");
 		},
@@ -79,7 +79,7 @@ export default function ProfilePage() {
 							<span className="flex items-center gap-1">
 								<Shield className="size-3.5" />
 								<Badge variant="outline" className="border-border text-muted-foreground capitalize py-0 px-1.5 text-[10px]">
-									{(user as any)?.role?.toLowerCase() || "member"}
+									{((user as unknown) as { role?: string })?.role?.toLowerCase() || "member"}
 								</Badge>
 							</span>
 						</div>

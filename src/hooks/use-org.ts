@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useOrganization } from "@/contexts/organization-context";
@@ -12,8 +13,19 @@ export function useOrg() {
 		queryFn: async () => {
 			if (!activeOrgId) return null;
 			const res = await api.org({ id: activeOrgId }).get();
-			if (res.error) throw new Error("Failed to fetch organization details");
-			return res.data as unknown as { members: { id: number; name: string | null; email: string; role: string; permissions?: object }[]; userRole: string };
+			if (res.error || !res.data) throw new Error("Failed to fetch organization details");
+			
+			const response = res.data as unknown as { 
+				success: boolean; 
+				data: { 
+					members: { id: number; name: string | null; email: string; image: string | null; role: string; permissions?: object }[]; 
+					userRole: string 
+				};
+				error?: string;
+			};
+			
+			if (!response.success) throw new Error(response.error || "Failed to fetch organization details");
+			return response.data;
 		},
 		enabled: !!activeOrgId,
 	});
@@ -57,7 +69,7 @@ export function useOrg() {
 	});
 
 	const updatePermissionsMutation = useMutation({
-		mutationFn: async (data: { userId: number; permissions: any }) => {
+		mutationFn: async (data: { userId: number; permissions: Record<string, unknown> }) => {
 			if (!activeOrgId) throw new Error("No active organization selected");
 			const res = await api.org({ id: activeOrgId }).members({ userId: data.userId }).put({
 				permissions: data.permissions,
@@ -71,11 +83,17 @@ export function useOrg() {
 		},
 	});
 
-	return {
+	return React.useMemo(() => ({
 		orgDetailsQuery,
 		createOrgMutation,
 		inviteMemberMutation,
 		removeMemberMutation,
 		updatePermissionsMutation,
-	};
+	}), [
+		orgDetailsQuery,
+		createOrgMutation,
+		inviteMemberMutation,
+		removeMemberMutation,
+		updatePermissionsMutation,
+	]);
 }

@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useOrganization } from "@/contexts/organization-context";
@@ -205,7 +206,7 @@ export function useTasks(options: UseTasksOptions = {}) {
 		},
 	});
 
-	return {
+	return React.useMemo(() => ({
 		tasksQuery,
 		activeTimerQuery,
 		createTaskMutation,
@@ -213,5 +214,13 @@ export function useTasks(options: UseTasksOptions = {}) {
 		deleteTaskMutation,
 		startTimerMutation,
 		stopTimerMutation,
-	};
+	}), [
+		tasksQuery,
+		activeTimerQuery,
+		createTaskMutation,
+		updateTaskMutation,
+		deleteTaskMutation,
+		startTimerMutation,
+		stopTimerMutation,
+	]);
 }

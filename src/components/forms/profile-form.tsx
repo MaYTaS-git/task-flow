@@ -48,7 +48,7 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 		mutationFn: async (data: { name: string; image?: string }) => {
 			const res = await api.users.profile.put(data);
 			if (res.error) {
-				throw new Error((res.error.value as any)?.error || "Failed to update profile");
+				throw new Error((res.error.value as { error?: string })?.error || "Failed to update profile");
 			}
 			return res.data;
 		},
@@ -71,46 +71,62 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-			<div className="space-y-2">
-				<Label htmlFor="profile-name" className="text-xs font-semibold text-muted-foreground">
-					Full Name
-				</Label>
-				<div className="relative">
-					<User className="absolute left-3.5 top-3 size-4 text-muted-foreground" />
-					<Input
-						id="profile-name"
-						type="text"
-						placeholder="Your Name"
-						className="pl-10 w-full bg-muted/20 border-border focus:border-primary text-xs rounded-xl"
-						{...register("name", { required: "Name is required" })}
-					/>
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+			<div className="space-y-4">
+				<div className="space-y-2">
+					<Label
+						htmlFor="profile-name"
+						className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+					>
+						Full Name
+					</Label>
+					<div className="relative group">
+						<User className="absolute left-4 top-3.5 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+						<Input
+							id="profile-name"
+							type="text"
+							placeholder="Your Name"
+							className="pl-11 w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-12"
+							{...register("name", {
+								required: "Name is required",
+							})}
+						/>
+					</div>
+					{errors.name && (
+						<p className="text-[10px] font-bold text-destructive uppercase tracking-wide ml-1">
+							{errors.name.message}
+						</p>
+					)}
 				</div>
-				{errors.name && (
-					<p className="text-xs text-destructive mt-1">{errors.name.message}</p>
-				)}
-			</div>
 
-			<div className="space-y-2">
-				<Label htmlFor="profile-image" className="text-xs font-semibold text-muted-foreground">
-					Profile Picture URL
-				</Label>
-				<div className="relative">
-					<ImageIcon className="absolute left-3.5 top-3 size-4 text-muted-foreground" />
-					<Input
-						id="profile-image"
-						type="url"
-						placeholder="https://example.com/avatar.png"
-						className="pl-10 w-full bg-muted/20 border-border focus:border-primary text-xs rounded-xl"
-						{...register("image")}
-					/>
+				<div className="space-y-2">
+					<Label
+						htmlFor="profile-image"
+						className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+					>
+						Profile Picture URL
+					</Label>
+					<div className="relative group">
+						<ImageIcon className="absolute left-4 top-3.5 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+						<Input
+							id="profile-image"
+							type="url"
+							placeholder="https://example.com/avatar.png"
+							className="pl-11 w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-12"
+							{...register("image")}
+						/>
+					</div>
 				</div>
 			</div>
 
 			<div className="pt-2 flex justify-end">
 				<Button
 					type="submit"
-					disabled={updateProfileMutation.isPending || !isDirty || !isValid}
+					size="lg"
+					className="rounded-2xl px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+					disabled={
+						updateProfileMutation.isPending || !isDirty || !isValid
+					}
 				>
 					{updateProfileMutation.isPending ? (
 						<Spinner className="size-4" />

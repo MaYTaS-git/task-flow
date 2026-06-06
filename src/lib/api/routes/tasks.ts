@@ -65,9 +65,17 @@ export const taskRoutes = new Elysia({ prefix: "/tasks" })
 							id: users.id,
 							name: users.name,
 							email: users.email,
+							image: users.image,
 						})
 						.from(taskAssignees)
 						.innerJoin(users, eq(taskAssignees.userId, users.id))
+						.innerJoin(
+							projectMembers,
+							and(
+								eq(projectMembers.userId, users.id),
+								eq(projectMembers.projectId, task.projectId)
+							)
+						)
 						.where(eq(taskAssignees.taskId, task.id));
 
 					return {
@@ -130,9 +138,17 @@ export const taskRoutes = new Elysia({ prefix: "/tasks" })
 					id: users.id,
 					name: users.name,
 					email: users.email,
+					image: users.image,
 				})
 				.from(taskAssignees)
 				.innerJoin(users, eq(taskAssignees.userId, users.id))
+				.innerJoin(
+					projectMembers,
+					and(
+						eq(projectMembers.userId, users.id),
+						eq(projectMembers.projectId, task.projectId)
+					)
+				)
 				.where(eq(taskAssignees.taskId, taskId));
 
 			// Fetch work sessions logs for this task

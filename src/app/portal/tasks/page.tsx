@@ -9,6 +9,7 @@ import {
 	Square,
 	Clock,
 	Trash2,
+	Edit2,
 } from "lucide-react";
 import { useProjects } from "@/hooks/use-projects";
 import { useOrg } from "@/hooks/use-org";
@@ -35,6 +36,14 @@ import { TaskCreateForm } from "@/components/forms/task-create-form";
 import { TaskDetailSheet } from "@/components/common/task-detail-sheet";
 import { TaskStatusBadge, TaskPriorityBadge } from "@/components/common/status-badge";
 import { MemberAvatar } from "@/components/common/member-chip";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 
 interface Task {
 	id: number;
@@ -46,7 +55,7 @@ interface Task {
 	dueDate: string | null;
 	createdAt: string;
 	projectName?: string;
-	assignees?: { id: number; name: string | null; email: string }[];
+	assignees?: { id: number; name: string | null; email: string; image?: string | null }[];
 }
 
 interface Project {
@@ -58,6 +67,7 @@ interface OrgMember {
 	id: number;
 	name: string | null;
 	email: string;
+	image?: string | null;
 }
 
 function formatDuration(sec: number): string {
@@ -78,6 +88,8 @@ export default function TasksPage() {
 
 	// Modals
 	const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+	const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+	const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 	const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 	const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
 
@@ -97,10 +109,10 @@ export default function TasksPage() {
 		filterAssigneeId,
 	});
 
-	const projects = (projectsQuery.data || []) as Project[];
-	const members = (orgDetailsQuery.data?.members || []) as OrgMember[];
+	const projects = React.useMemo(() => (projectsQuery.data || []) as Project[], [projectsQuery.data]);
+	const members = React.useMemo(() => (orgDetailsQuery.data?.members || []) as OrgMember[], [orgDetailsQuery.data?.members]);
 	const userRole = orgDetailsQuery.data?.userRole || "MEMBER";
-	const tasks = (tasksQuery.data || []) as Task[];
+	const tasks = React.useMemo(() => (tasksQuery.data || []) as Task[], [tasksQuery.data]);
 	const isTasksLoading = tasksQuery.isLoading;
 	const activeTimer = activeTimerQuery.data;
 
@@ -108,25 +120,26 @@ export default function TasksPage() {
 	const canEdit = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
 	// Timer Ticker
-	const [timerSeconds, setTimerSeconds] = useState(0);
+	const [now, setNow] = useState<number>(0);
+
 	useEffect(() => {
-		let interval: NodeJS.Timeout;
-		if (activeTimer) {
-			const start = new Date(activeTimer.startTime).getTime();
-			const update = () => {
-				const diff = Math.max(
-					0,
-					Math.floor((Date.now() - start) / 1000),
-				);
-				setTimerSeconds(diff);
-			};
-			update();
-			interval = setInterval(update, 1000);
-		} else {
-			setTimerSeconds(0);
-		}
+		const timeout = setTimeout(() => setNow(Date.now()), 0);
+		return () => clearTimeout(timeout);
+	}, []);
+
+	useEffect(() => {
+		if (!activeTimer) return;
+
+		const interval = setInterval(() => {
+			setNow(Date.now());
+		}, 1000);
+
 		return () => clearInterval(interval);
 	}, [activeTimer]);
+
+	const timerSeconds = activeTimer 
+		? Math.max(0, Math.floor((now - new Date(activeTimer.startTime).getTime()) / 1000))
+		: 0;
 
 	// Set Top Layout Header Data
 	useEffect(() => {
@@ -170,7 +183,13 @@ export default function TasksPage() {
 			),
 		});
 		return () => setHeaderData(null);
-	}, [setHeaderData, projects, activeTimer?.taskId, activeTimer?.taskTitle, timerSeconds, stopTimerMutation.mutate]);
+	}, [
+		setHeaderData,
+		projects,
+		activeTimer,
+		timerSeconds,
+		stopTimerMutation,
+	]);
 
 	return (
 		<div className="flex flex-col min-w-0 bg-background">
@@ -315,83 +334,119 @@ export default function TasksPage() {
 					</div>
 				) : (
 					<div className="bg-card border border-border rounded-3xl p-6 space-y-4 animate-fade-in-up">
-						<div className="divide-y divide-border">
-							{tasks.map((task) => (
-								<div
-									key={task.id}
-									className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:bg-accent/30 -mx-2 px-2 rounded-xl transition-all duration-150 cursor-pointer"
-									onClick={() => setSelectedTaskId(task.id)}
-								>
-									<div className="flex-1 space-y-1">
-										<div className="flex items-center gap-2 flex-wrap">
-											<span className="text-[10px] text-muted-foreground font-medium">
-												{task.projectName}
-											</span>
-											<TaskStatusBadge status={task.status} />
-											<TaskPriorityBadge priority={task.priority} />
-										</div>
-										<h3 className="text-sm font-bold leading-snug group-hover:text-primary transition-colors">
-											{task.title}
-										</h3>
-										<p className="text-xs text-muted-foreground font-light line-clamp-1">
-											{task.description || "No description provided."}
-										</p>
-									</div>
-
-									<div className="flex items-center gap-4 justify-between md:justify-end">
-										{/* Assignee avatars */}
-										<div className="flex -space-x-1.5 overflow-hidden">
-											{task.assignees?.map((member) => (
-												<MemberAvatar
-													key={member.id}
-													name={member.name}
-													email={member.email}
-													size="sm"
-													className="border-2 border-card"
-												/>
-											))}
-										</div>
-
-										{/* Timer & Actions */}
-										<div
-											className="flex items-center gap-2"
-											onClick={(e) => e.stopPropagation()}
+						<div className="border border-border rounded-2xl overflow-hidden">
+							<Table>
+								<TableHeader className="bg-muted/30">
+									<TableRow className="hover:bg-transparent">
+										<TableHead className="w-12"></TableHead>
+										<TableHead className="text-[10px] uppercase font-bold tracking-wider">Task Details</TableHead>
+										<TableHead className="text-[10px] uppercase font-bold tracking-wider">Status</TableHead>
+										<TableHead className="text-[10px] uppercase font-bold tracking-wider">Priority</TableHead>
+										<TableHead className="text-[10px] uppercase font-bold tracking-wider">Team</TableHead>
+										<TableHead className="text-right text-[10px] uppercase font-bold tracking-wider">Actions</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{tasks.map((task) => (
+										<TableRow 
+											key={task.id}
+											className="cursor-pointer group"
+											onClick={() => setSelectedTaskId(task.id)}
 										>
-											{activeTimer && activeTimer.taskId === task.id ? (
-												<Button
-													variant="destructive"
-													size="sm"
-													onClick={() => stopTimerMutation.mutate(task.id)}
-													className="font-mono text-[10px] flex items-center gap-1.5"
+											<TableCell>
+												<div className="p-2 bg-muted group-hover:bg-primary/10 rounded-xl border border-border text-muted-foreground group-hover:text-primary transition-colors flex items-center justify-center">
+													<CheckSquare className="size-4" />
+												</div>
+											</TableCell>
+											<TableCell className="max-w-[400px]">
+												<div className="space-y-1">
+													<div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{task.projectName}</div>
+													<h3 className="text-sm font-bold leading-snug group-hover:text-primary transition-colors">
+														{task.title}
+													</h3>
+													<p className="text-xs text-muted-foreground font-light line-clamp-1">
+														{task.description || "No description provided."}
+													</p>
+												</div>
+											</TableCell>
+											<TableCell>
+												<TaskStatusBadge status={task.status} />
+											</TableCell>
+											<TableCell>
+												<TaskPriorityBadge priority={task.priority} />
+											</TableCell>
+											<TableCell>
+												<div className="flex -space-x-2 overflow-hidden">
+													{task.assignees?.map((member) => (
+														<MemberAvatar
+															key={member.id}
+															name={member.name}
+															email={member.email}
+															image={member.image}
+															size="sm"
+															className="border-2 border-card"
+														/>
+													))}
+												</div>
+											</TableCell>
+											<TableCell className="text-right">
+												<div
+													className="flex items-center justify-end gap-2"
+													onClick={(e) => e.stopPropagation()}
 												>
-													<Clock className="size-3 animate-pulse" />
-													<span>{formatDuration(timerSeconds)}</span>
-													<Square className="size-3 fill-current" />
-												</Button>
-											) : (
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => startTimerMutation.mutate({ taskId: task.id })}
-													title="Start Timer"
-												>
-													<Play className="size-3 fill-current" />
-												</Button>
-											)}
+													{activeTimer && activeTimer.taskId === task.id ? (
+														<Button
+															variant="destructive"
+															size="sm"
+															onClick={() => stopTimerMutation.mutate(task.id)}
+															className="h-8 font-mono text-[10px] flex items-center gap-1.5"
+														>
+															<Clock className="size-3 animate-pulse" />
+															<span>{formatDuration(timerSeconds)}</span>
+															<Square className="size-3 fill-current" />
+														</Button>
+													) : (
+														<Button
+															variant="outline"
+															size="sm"
+															className="h-8 text-[10px]"
+															onClick={() => startTimerMutation.mutate({ taskId: task.id })}
+															title="Start Timer"
+														>
+															<Play className="size-3 fill-current" />
+														</Button>
+													)}
 
-											<Button
-												variant="ghost"
-												size="icon-sm"
-												onClick={() => setTaskToDelete(task.id)}
-												title="Delete Task"
-												className="hover:text-destructive hover:bg-destructive/10"
-											>
-												<Trash2 className="size-3.5" />
-											</Button>
-										</div>
-									</div>
-								</div>
-							))}
+													{canEdit && (
+														<Button
+															variant="ghost"
+															size="icon-sm"
+															className="h-8 w-8 hover:text-primary hover:bg-primary/10"
+															onClick={() => {
+																setTaskToEdit(task);
+																setShowEditTaskModal(true);
+															}}
+															title="Edit Task"
+														>
+															<Edit2 className="size-3.5" />
+														</Button>
+													)}
+
+													<Button
+														variant="ghost"
+														size="icon-sm"
+														className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
+														onClick={() => setTaskToDelete(task.id)}
+														title="Delete Task"
+													>
+														<Trash2 className="size-3.5" />
+													</Button>
+												</div>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
 						</div>
 					</div>
 				)}
@@ -409,23 +464,37 @@ export default function TasksPage() {
 
 			{/* Create Task Modal */}
 			<Dialog open={showNewTaskModal} onOpenChange={setShowNewTaskModal}>
-				<DialogContent className="max-w-md rounded-3xl p-6">
-					<DialogHeader>
-						<DialogTitle className="text-lg font-bold">
-							Create Task
-						</DialogTitle>
-						<DialogDescription className="text-xs text-muted-foreground font-light mt-1">
-							Add a task item with status and multiple assignee options.
-						</DialogDescription>
-					</DialogHeader>
+				<TaskCreateForm
+					projects={projects}
+					members={members}
+					onSuccess={() => setShowNewTaskModal(false)}
+					onCancel={() => setShowNewTaskModal(false)}
+				/>
+			</Dialog>
+
+			{/* Edit Task Modal */}
+			{taskToEdit && (
+				<Dialog open={showEditTaskModal} onOpenChange={setShowEditTaskModal}>
 					<TaskCreateForm
 						projects={projects}
 						members={members}
-						onSuccess={() => setShowNewTaskModal(false)}
-						onCancel={() => setShowNewTaskModal(false)}
+						initialData={{
+							...taskToEdit,
+							assignees: taskToEdit.assignees?.map(a => a.id),
+							dueDate: taskToEdit.dueDate ? new Date(taskToEdit.dueDate).toISOString().split('T')[0] : ""
+						}}
+						onSuccess={() => {
+							setShowEditTaskModal(false);
+							setTaskToEdit(null);
+							tasksQuery.refetch();
+						}}
+						onCancel={() => {
+							setShowEditTaskModal(false);
+							setTaskToEdit(null);
+						}}
 					/>
-				</DialogContent>
-			</Dialog>
+				</Dialog>
+			)}
 
 			{/* Delete Task Dialog */}
 			<Dialog

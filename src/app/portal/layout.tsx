@@ -5,7 +5,6 @@ import { useSession, signOut } from "next-auth/react";
 import {
 	redirect,
 	usePathname,
-	useRouter,
 	useSearchParams,
 } from "next/navigation";
 import Link from "next/link";
@@ -38,8 +37,6 @@ import {
 	DialogDescription,
 	DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -53,7 +50,6 @@ import {
 	SidebarProvider,
 	Sidebar,
 	SidebarContent,
-	SidebarFooter,
 	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuItem,
@@ -447,21 +443,10 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 				open={showCreateOrgModal}
 				onOpenChange={setShowCreateOrgModal}
 			>
-				<DialogContent className="max-w-md rounded-3xl p-6">
-					<DialogHeader>
-						<DialogTitle className="text-lg font-bold">
-							Create Organization
-						</DialogTitle>
-						<DialogDescription className="text-xs text-muted-foreground font-light mt-1.5">
-							Create a workspace to manage your team, projects,
-							and track tasks.
-						</DialogDescription>
-					</DialogHeader>
-					<OrgCreateForm
-						onSuccess={() => setShowCreateOrgModal(false)}
-						onCancel={() => setShowCreateOrgModal(false)}
-					/>
-				</DialogContent>
+				<OrgCreateForm
+					onSuccess={() => setShowCreateOrgModal(false)}
+					onCancel={() => setShowCreateOrgModal(false)}
+				/>
 			</Dialog>
 
 			{/* Logout Confirmation Dialog */}

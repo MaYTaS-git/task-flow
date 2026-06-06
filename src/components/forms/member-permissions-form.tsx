@@ -5,14 +5,33 @@ import { useForm, Controller } from "react-hook-form";
 import { useOrg } from "@/hooks/use-org";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+	DialogClose,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MemberPermissionsFormProps {
 	userId: number;
+	userNameOrEmail?: string;
 	initialPermissions: {
-		projects?: { view?: boolean; create?: boolean; edit?: boolean; delete?: boolean };
-		tasks?: { view?: boolean; create?: boolean; edit?: boolean; delete?: boolean };
+		projects?: {
+			view?: boolean;
+			create?: boolean;
+			edit?: boolean;
+			delete?: boolean;
+		};
+		tasks?: {
+			view?: boolean;
+			create?: boolean;
+			edit?: boolean;
+			delete?: boolean;
+		};
 	};
 	onSuccess?: () => void;
 	onCancel?: () => void;
@@ -31,6 +50,7 @@ interface MemberPermissionsInput {
 
 export function MemberPermissionsForm({
 	userId,
+	userNameOrEmail = "Member",
 	initialPermissions,
 	onSuccess,
 	onCancel,
@@ -82,112 +102,186 @@ export function MemberPermissionsForm({
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
-			<div className="space-y-4">
-				<div className="space-y-2.5">
-					<h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Project Control</h4>
-					<div className="grid grid-cols-2 gap-3">
-						<Controller
-							name="projectsView"
-							control={control}
-							render={({ field }) => (
-								<label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-									<Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
-									<span>View Projects</span>
-								</label>
-							)}
-						/>
-						<Controller
-							name="projectsCreate"
-							control={control}
-							render={({ field }) => (
-								<label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-									<Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
-									<span>Create Projects</span>
-								</label>
-							)}
-						/>
-						<Controller
-							name="projectsEdit"
-							control={control}
-							render={({ field }) => (
-								<label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-									<Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
-									<span>Edit Projects</span>
-								</label>
-							)}
-						/>
-						<Controller
-							name="projectsDelete"
-							control={control}
-							render={({ field }) => (
-								<label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-									<Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
-									<span>Delete Projects</span>
-								</label>
-							)}
-						/>
-					</div>
-				</div>
+		<DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+			<DialogHeader className="p-6 pb-2">
+				<DialogTitle className="text-lg font-bold">
+					Manage Permissions: {userNameOrEmail}
+				</DialogTitle>
+				<DialogDescription className="text-xs text-muted-foreground font-light mt-1">
+					Toggle specific feature privileges for this user.
+				</DialogDescription>
+			</DialogHeader>
 
-				<div className="space-y-2.5 pt-2 border-t border-border">
-					<h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Task Control</h4>
-					<div className="grid grid-cols-2 gap-3">
-						<Controller
-							name="tasksView"
-							control={control}
-							render={({ field }) => (
-								<label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-									<Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
-									<span>View Tasks</span>
-								</label>
-							)}
-						/>
-						<Controller
-							name="tasksCreate"
-							control={control}
-							render={({ field }) => (
-								<label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-									<Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
-									<span>Create Tasks</span>
-								</label>
-							)}
-						/>
-						<Controller
-							name="tasksEdit"
-							control={control}
-							render={({ field }) => (
-								<label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-									<Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
-									<span>Edit Tasks</span>
-								</label>
-							)}
-						/>
-						<Controller
-							name="tasksDelete"
-							control={control}
-							render={({ field }) => (
-								<label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-									<Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
-									<span>Delete Tasks</span>
-								</label>
-							)}
-						/>
-					</div>
-				</div>
-			</div>
+			<ScrollArea className="flex-1 min-h-0">
+				<form
+					id="member-permissions-form"
+					onSubmit={handleSubmit(onSubmit)}
+					className="p-6 space-y-8"
+				>
+					<div className="space-y-6">
+						<div className="space-y-4">
+							<h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] ml-1">
+								Project Control
+							</h4>
+							<div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-3xl border border-border/50">
+								<Controller
+									name="projectsView"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">View Projects</span>
+										</label>
+									)}
+								/>
+								<Controller
+									name="projectsCreate"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">Create Projects</span>
+										</label>
+									)}
+								/>
+								<Controller
+									name="projectsEdit"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">Edit Projects</span>
+										</label>
+									)}
+								/>
+								<Controller
+									name="projectsDelete"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">Delete Projects</span>
+										</label>
+									)}
+								/>
+							</div>
+						</div>
 
-			<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
-				<Button
-					type="button"
-					variant="ghost"
-					onClick={onCancel}
-					className="text-muted-foreground hover:text-foreground"
+						<div className="space-y-4">
+							<h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] ml-1">
+								Task Control
+							</h4>
+							<div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-3xl border border-border/50">
+								<Controller
+									name="tasksView"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">View Tasks</span>
+										</label>
+									)}
+								/>
+								<Controller
+									name="tasksCreate"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">Create Tasks</span>
+										</label>
+									)}
+								/>
+								<Controller
+									name="tasksEdit"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">Edit Tasks</span>
+										</label>
+									)}
+								/>
+								<Controller
+									name="tasksDelete"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">Delete Tasks</span>
+										</label>
+									)}
+								/>
+							</div>
+						</div>
+					</div>
+				</form>
+			</ScrollArea>
+
+			<DialogFooter className="p-6 pt-2 border-t border-border flex gap-2 justify-end">
+				<DialogClose
+					render={
+						<Button
+							type="button"
+							variant="ghost"
+							onClick={onCancel}
+							className="text-muted-foreground hover:text-foreground"
+						/>
+					}
 				>
 					Cancel
-				</Button>
+				</DialogClose>
 				<Button
 					type="submit"
+					form="member-permissions-form"
 					disabled={updatePermissionsMutation.isPending || !isValid}
 				>
 					{updatePermissionsMutation.isPending ? (
@@ -197,6 +291,6 @@ export function MemberPermissionsForm({
 					)}
 				</Button>
 			</DialogFooter>
-		</form>
+		</DialogContent>
 	);
 }
