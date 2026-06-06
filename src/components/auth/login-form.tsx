@@ -302,7 +302,7 @@ export default function LoginForm() {
 				{/* ================= FORMS PANEL LAYOUTS ================= */}
 				{/* 1. LOGIN FORM PANEL (Placed on Right, slides out to right when inactive) */}
 				<motion.div
-					className="w-full md:w-1/2 h-full absolute top-0 bottom-0 right-0 flex flex-col bg-neutral-50 dark:bg-neutral-900/40 overflow-hidden"
+					className="w-full md:w-1/2 h-full absolute top-0 bottom-0 right-0 flex flex-col bg-background overflow-hidden"
 					initial={false}
 					animate={{
 						x: mode === "login" ? "0%" : "100%",
@@ -355,7 +355,7 @@ export default function LoginForm() {
 										placeholder="name@example.com"
 										{...registerLogin("email")}
 										disabled={loadingState}
-										className="w-full bg-background dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 focus:border-primary"
+										className="w-full border-border focus:border-primary"
 										aria-invalid={!!loginErrors.email}
 									/>
 									{loginErrors.email && (
@@ -367,7 +367,7 @@ export default function LoginForm() {
 									<FieldLabel htmlFor="login-password">
 										Password
 									</FieldLabel>
-									<InputGroup className="w-full bg-background dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+									<InputGroup className="w-full border-border">
 										<InputGroupInput
 											id="login-password"
 											type={
@@ -442,9 +442,9 @@ export default function LoginForm() {
 
 							<div className="relative flex items-center justify-center my-4">
 								<div className="absolute inset-0 flex items-center">
-									<div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
+									<div className="w-full border-t border-border" />
 								</div>
-								<span className="relative px-3 bg-neutral-50 dark:bg-neutral-950 text-xs uppercase text-muted-foreground font-medium">
+								<span className="relative px-3 bg-background text-xs uppercase text-muted-foreground font-medium">
 									Or continue with
 								</span>
 							</div>
@@ -527,7 +527,7 @@ export default function LoginForm() {
 
 				{/* 2. SIGN-UP FORM PANEL (Placed on Left, slides out to left when inactive) */}
 				<motion.div
-					className="w-full md:w-1/2 h-full absolute top-0 bottom-0 left-0 flex flex-col bg-neutral-50 dark:bg-neutral-900/40 overflow-hidden"
+					className="w-full md:w-1/2 h-full absolute top-0 bottom-0 left-0 flex flex-col bg-background overflow-hidden"
 					initial={false}
 					animate={{
 						x: mode === "signup" ? "0%" : "-100%",
@@ -580,7 +580,7 @@ export default function LoginForm() {
 										placeholder="John Doe"
 										{...registerSignup("name")}
 										disabled={loadingState}
-										className="w-full bg-background dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 focus:border-primary"
+										className="w-full border-border focus:border-primary"
 										aria-invalid={!!signupErrors.name}
 									/>
 									{signupErrors.name && (
@@ -598,7 +598,7 @@ export default function LoginForm() {
 										placeholder="name@example.com"
 										{...registerSignup("email")}
 										disabled={loadingState}
-										className="w-full bg-background dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 focus:border-primary"
+										className="w-full border-border focus:border-primary"
 										aria-invalid={!!signupErrors.email}
 									/>
 									{signupErrors.email && (
@@ -610,7 +610,7 @@ export default function LoginForm() {
 									<FieldLabel htmlFor="signup-password">
 										Password
 									</FieldLabel>
-									<InputGroup className="w-full bg-background dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+									<InputGroup className="w-full border-border">
 										<InputGroupInput
 											id="signup-password"
 											type={
@@ -699,9 +699,9 @@ export default function LoginForm() {
 
 							<div className="relative flex items-center justify-center my-3">
 								<div className="absolute inset-0 flex items-center">
-									<div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
+									<div className="w-full border-t border-border" />
 								</div>
-								<span className="relative px-3 bg-neutral-50 dark:bg-neutral-950 text-xs uppercase text-muted-foreground font-medium">
+								<span className="relative px-3 bg-background text-xs uppercase text-muted-foreground font-medium">
 									Or continue with
 								</span>
 							</div>

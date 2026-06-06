@@ -78,6 +78,7 @@ export const authOptions: NextAuthOptions = {
 					email: user.email,
 					name: user.name ?? undefined,
 					image: user.image ?? undefined,
+					role: user.role,
 				};
 			},
 		}),
@@ -86,9 +87,15 @@ export const authOptions: NextAuthOptions = {
 		strategy: "jwt",
 	},
 	callbacks: {
-		async jwt({ token, user }) {
+		async jwt({ token, user, trigger, session }) {
 			if (user) {
 				token.id = String(user.id);
+				token.role = (user as { role?: string }).role || "ADMIN";
+				token.image = user.image;
+			}
+			if (trigger === "update" && session) {
+				if (session.image !== undefined) token.image = session.image;
+				if (session.name !== undefined) token.name = session.name;
 			}
 			return token;
 		},
@@ -98,6 +105,9 @@ export const authOptions: NextAuthOptions = {
 				user: {
 					...session.user,
 					id: token.id as string,
+					role: token.role as string,
+					image: token.image as string | null | undefined,
+					name: token.name as string | null | undefined,
 				},
 			};
 		},

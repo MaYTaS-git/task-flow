@@ -1,219 +1,106 @@
+"use client";
+
 import React from "react";
-import { KeyRound } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Header } from "@/components/common/header";
 import { Footer } from "@/components/common/footer";
-import { BackButton } from "@/components/common/back-button";
-
-export const metadata = {
-	title: "Privacy Policy - TaskFlow",
-	description: "Privacy Policy and data practices for TaskFlow.",
-};
 
 export default function PrivacyPage() {
 	return (
-		<ScrollArea className="h-screen w-full bg-neutral-50 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 font-sans selection:bg-primary/20 relative">
+		<ScrollArea className="h-screen w-full bg-background text-foreground font-sans selection:bg-primary/20 relative">
+			{/* Grid & Radial Glowing Gradients */}
+			<div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] pointer-events-none" />
+			<div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-primary/5 dark:bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+
 			<Header />
 
-			{/* Main Content */}
-			<main className="container max-w-3xl mx-auto px-4 pt-28 pb-16">
-				<div className="space-y-8">
-					{/* Hero Section */}
-					<div className="space-y-4 text-center md:text-left flex flex-col items-center md:items-start">
-						<BackButton />
-						<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary w-fit">
-							<KeyRound className="size-3.5" />
-							Privacy
-						</div>
-						<h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-linear-to-r from-neutral-900 via-neutral-800 to-neutral-600 dark:from-white dark:via-neutral-200 dark:to-neutral-400 bg-clip-text text-transparent">
-							Privacy Policy
-						</h1>
-						<p className="text-sm text-neutral-500 dark:text-neutral-400">
-							Last updated: June 4, 2026
+			<main className="relative z-10 max-w-4xl mx-auto px-6 pt-32 pb-32">
+				<div className="space-y-12">
+					<div className="text-center space-y-4">
+						<h1 className="text-4xl font-extrabold tracking-tight">Privacy Policy</h1>
+						<p className="text-sm text-muted-foreground">
+							Last updated: June 6, 2026
 						</p>
 					</div>
 
-					<hr className="border-neutral-200 dark:border-neutral-800" />
+					<hr className="border-border" />
 
-					{/* Privacy List */}
-					<div className="space-y-6 prose dark:prose-invert max-w-none text-neutral-600 dark:text-neutral-300">
-						<p className="leading-relaxed">
-							At TaskFlow, we are committed to protecting your
-							privacy and security. This Privacy Policy outlines
-							how we collect, use, disclose, and protect your
-							information when you use our task management
-							application.
-						</p>
-						<p className="leading-relaxed">
-							By registering for, using, or accessing TaskFlow,
-							you agree to the collection and use of information
-							in accordance with this policy.
-						</p>
-
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
+					<div className="space-y-6 prose dark:prose-invert max-w-none text-foreground/80">
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
 								1. Information We Collect
 							</h2>
-							<p className="leading-relaxed text-sm">
-								We collect several types of information to
-								provide and improve our service to you:
+							<p className="text-sm font-light leading-relaxed">
+								We collect information you provide directly to us, such as when you create an account, create an organization, or communicate with us. This includes your name, email address, and any other information you choose to provide.
 							</p>
-							<ul className="list-disc pl-5 space-y-1 text-sm">
-								<li>
-									<strong>Account Data:</strong> When you
-									register an account, we collect your name,
-									email address, profile picture (if provided
-									via OAuth), and credentials.
-								</li>
-								<li>
-									<strong>Workspace Data:</strong> We store
-									the projects, tasks, boards, comments, tags,
-									and files you create or upload in TaskFlow.
-								</li>
-								<li>
-									<strong>Usage Data:</strong> We
-									automatically collect information about how
-									you interact with our application, such as
-									your IP address, browser type, device
-									information, operating system, and pages
-									visited.
-								</li>
-							</ul>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
 								2. How We Use Your Information
 							</h2>
-							<p className="leading-relaxed text-sm">
-								We use the collected information for various
-								purposes:
+							<p className="text-sm font-light leading-relaxed">
+								We use the information we collect to provide, maintain, and improve our Service, to communicate with you, and to protect TaskFlow and our users.
 							</p>
-							<ul className="list-disc pl-5 space-y-1 text-sm">
-								<li>
-									To provide, maintain, and support the
-									TaskFlow application.
-								</li>
-								<li>
-									To manage your account, authenticate logins,
-									and handle session lifetimes.
-								</li>
-								<li>
-									To communicate with you regarding security
-									updates, feature additions, or support
-									requests.
-								</li>
-								<li>
-									To analyze and monitor usage behaviors to
-									improve usability and optimize server
-									performance.
-								</li>
-							</ul>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								3. Data Storage and Security
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								3. Information Sharing
 							</h2>
-							<p className="leading-relaxed text-sm">
-								Your data is stored in secure cloud database
-								environments. We use industry-standard security
-								measures (such as TLS encryption in transit and
-								hashing passwords with secure algorithms) to
-								safeguard your personal details and workspace
-								information. However, no method of transmission
-								over the Internet or method of electronic
-								storage is 100% secure, and we cannot guarantee
-								absolute security.
+							<p className="text-sm font-light leading-relaxed">
+								We do not share your personal information with third parties except as described in this Privacy Policy, such as with your consent or as required by law.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								4. Cookies and Session Lifetimes
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								4. Data Security
 							</h2>
-							<p className="leading-relaxed text-sm">
-								We use cookies and similar tracking technologies
-								to track the activity on our service and hold
-								certain information. When you log in with
-								&ldquo;Remember me for 30 days&rdquo; checked,
-								we configure a secure cookie that keeps your
-								session active for up to 30 days. If unchecked,
-								the session expires dynamically in 1 day. You
-								can instruct your browser to refuse all cookies,
-								but doing so may prevent you from logging in or
-								using some features of our service.
+							<p className="text-sm font-light leading-relaxed">
+								We take reasonable measures to help protect information about you from loss, theft, misuse, and unauthorized access, disclosure, alteration, and destruction.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								5. Sharing of Your Information
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								5. Data Retention
 							</h2>
-							<p className="leading-relaxed text-sm">
-								We do not sell, trade, or rent your personal
-								information to third parties. We may share
-								information only in the following circumstances:
+							<p className="text-sm font-light leading-relaxed">
+								We store the information we collect for as long as is necessary for the purpose(s) for which we originally collected it, or for other legitimate business purposes.
 							</p>
-							<ul className="list-disc pl-5 space-y-1 text-sm">
-								<li>
-									With trusted third-party service providers
-									who assist us in operating our application
-									and serving you (e.g., hosting providers,
-									authentication providers), under strict
-									confidentiality agreements.
-								</li>
-								<li>
-									If required to do so by law, court order, or
-									to comply with a legal obligation or protect
-									the rights and safety of TaskFlow, its
-									users, or others.
-								</li>
-							</ul>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								6. Your Rights and Choices
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								6. Your Choices
 							</h2>
-							<p className="leading-relaxed text-sm">
-								Depending on your location, you may have rights
-								regarding your personal data. These typically
-								include the right to access, correct, delete, or
-								limit the use of your personal details. You can
-								update your account information directly in your
-								profile settings or delete your account entirely
-								by contacting support.
+							<p className="text-sm font-light leading-relaxed">
+								You may update or correct your account information at any time by logging into your account settings. You can also delete your account, which will remove your personal information from our active databases.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								7. Changes to This Privacy Policy
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								7. Cookies
 							</h2>
-							<p className="leading-relaxed text-sm">
-								We may update our Privacy Policy from time to
-								time. We will notify you of any changes by
-								posting the new Privacy Policy on this page and
-								updating the &ldquo;Last updated&rdquo; date. We
-								encourage you to review this Policy periodically
-								for any changes.
+							<p className="text-sm font-light leading-relaxed">
+								We use cookies and similar technologies to collect information about your browsing activities and to remember your preferences.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
 								8. Contact Us
 							</h2>
-							<p className="leading-relaxed text-sm">
-								If you have any questions about this Privacy
-								Policy, please contact us at
-								privacy@taskflow.example.com.
+							<p className="text-sm font-light leading-relaxed">
+								If you have any questions about this Privacy Policy, please contact us at privacy@taskflow.com.
 							</p>
 						</section>
 					</div>
 				</div>
 			</main>
+
 			<Footer />
 		</ScrollArea>
 	);

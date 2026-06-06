@@ -4,7 +4,9 @@
 
 ## Follow DRY principle strictly
 
-## Maintain UI Uniformity strictly
+## Never use Any type anywhere strictly
+
+## Maintain UI Uniformity strictly, avoid over-designing, let the theme and shadcn handle the designing
 
 ## Maintain Code Quality strictly
 

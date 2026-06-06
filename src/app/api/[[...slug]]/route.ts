@@ -3,14 +3,22 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 
 import { db, users } from "@/lib/db";
+import { orgRoutes } from "@/lib/api/routes/org";
+import { projectRoutes } from "@/lib/api/routes/projects";
+import { taskRoutes } from "@/lib/api/routes/tasks";
+import { notificationRoutes } from "@/lib/api/routes/notifications";
+import { analyticsRoutes } from "@/lib/api/routes/analytics";
+import { userRoutes } from "@/lib/api/routes/users";
+import { cronRoutes } from "@/lib/api/routes/cron";
+import { sql as drizzleSql } from "drizzle-orm";
 
 export const app = new Elysia({ prefix: "/api" })
 	.get("/", () => ({ message: "API root" }))
 
-	// registration endpoint
+	// Registration endpoint
 	.post(
 		"/register",
-		async ({ body }) => {
+		async ({ body, set }) => {
 			const existing = await db
 				.select()
 				.from(users)
@@ -18,38 +26,45 @@ export const app = new Elysia({ prefix: "/api" })
 				.limit(1);
 
 			if (existing.length > 0) {
-				return new Response(
-					JSON.stringify({ success: false, message: "Email is already registered." }),
-					{
-						status: 409,
-						headers: { "content-type": "application/json" },
-					},
-				);
+				set.status = 409;
+				return {
+					success: false,
+					message: "Email is already registered.",
+				};
 			}
 
 			const hashedPassword = await bcrypt.hash(body.password, 10);
+
+			// First user in system is SUPER_ADMIN, others are ADMIN
+			const [userCountRow] = await db
+				.select({ count: drizzleSql`count(${users.id})::int` })
+				.from(users)
+				.catch(() => [{ count: 0 }]);
+			const isFirstUser = (userCountRow?.count || 0) === 0;
+
 			const inserted = await db
 				.insert(users)
 				.values({
 					name: body.name,
 					email: body.email,
 					hashedPassword,
+					role: isFirstUser ? "SUPER_ADMIN" : "ADMIN",
 				})
-				.returning({ id: users.id, email: users.email });
+				.returning({
+					id: users.id,
+					email: users.email,
+					role: users.role,
+				});
 
-			return new Response(
-				JSON.stringify({
-					success: true,
-					data: {
-						id: inserted[0].id,
-						email: inserted[0].email,
-					},
-				}),
-				{
-					status: 201,
-					headers: { "content-type": "application/json" },
+			set.status = 201;
+			return {
+				success: true,
+				data: {
+					id: inserted[0].id,
+					email: inserted[0].email,
+					role: inserted[0].role,
 				},
-			);
+			};
 		},
 		{
 			body: t.Object({
@@ -58,7 +73,16 @@ export const app = new Elysia({ prefix: "/api" })
 				password: t.String(),
 			}),
 		},
-	);
+	)
+
+	// Mount modular controllers
+	.use(orgRoutes)
+	.use(projectRoutes)
+	.use(taskRoutes)
+	.use(notificationRoutes)
+	.use(analyticsRoutes)
+	.use(userRoutes)
+	.use(cronRoutes);
 
 export const GET = app.fetch;
 export const POST = app.fetch;

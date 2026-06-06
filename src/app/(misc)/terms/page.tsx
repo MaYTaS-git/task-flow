@@ -1,193 +1,106 @@
+"use client";
+
 import React from "react";
-import { ShieldCheck } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Header } from "@/components/common/header";
 import { Footer } from "@/components/common/footer";
-import { BackButton } from "@/components/common/back-button";
-
-export const metadata = {
-	title: "Terms of Service - TaskFlow",
-	description: "Terms of Service and conditions for using TaskFlow.",
-};
 
 export default function TermsPage() {
 	return (
-		<ScrollArea className="h-screen w-full bg-neutral-50 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 font-sans selection:bg-primary/20 relative">
+		<ScrollArea className="h-screen w-full bg-background text-foreground font-sans selection:bg-primary/20 relative">
+			{/* Grid & Radial Glowing Gradients */}
+			<div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] pointer-events-none" />
+			<div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-primary/5 dark:bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+
 			<Header />
 
-			{/* Main Content */}
-			<main className="container max-w-3xl mx-auto px-4 pt-28 pb-16">
-				<div className="space-y-8">
-					{/* Hero Section */}
-					<div className="space-y-4 text-center md:text-left flex flex-col items-center md:items-start">
-						<BackButton />
-						<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary w-fit">
-							<ShieldCheck className="size-3.5" />
-							Agreement
-						</div>
-						<h1 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-linear-to-r from-neutral-900 via-neutral-800 to-neutral-600 dark:from-white dark:via-neutral-200 dark:to-neutral-400 bg-clip-text text-transparent">
-							Terms of Service
-						</h1>
-						<p className="text-sm text-neutral-500 dark:text-neutral-400">
-							Last updated: June 4, 2026
+			<main className="relative z-10 max-w-4xl mx-auto px-6 pt-32 pb-32">
+				<div className="space-y-12">
+					<div className="text-center space-y-4">
+						<h1 className="text-4xl font-extrabold tracking-tight">Terms of Service</h1>
+						<p className="text-sm text-muted-foreground">
+							Last updated: June 6, 2026
 						</p>
 					</div>
 
-					<hr className="border-neutral-200 dark:border-neutral-800" />
+					<hr className="border-border" />
 
-					{/* Terms List */}
-					<div className="space-y-6 prose dark:prose-invert max-w-none text-neutral-600 dark:text-neutral-300">
-						<p className="leading-relaxed">
-							Welcome to TaskFlow. These Terms of Service
-							(&ldquo;Terms&rdquo;) govern your access to and use
-							of our task management application and services.
-							Please read them carefully before using TaskFlow.
-						</p>
-						<p className="leading-relaxed">
-							By accessing or using TaskFlow, you agree to be
-							bound by these Terms and our Privacy Policy. If you
-							do not agree to these Terms, you may not access or
-							use our services.
-						</p>
-
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								1. Account Registration
+					<div className="space-y-6 prose dark:prose-invert max-w-none text-foreground/80">
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								1. Acceptance of Terms
 							</h2>
-							<p className="leading-relaxed text-sm">
-								To use certain features of TaskFlow, you must
-								register for an account. You agree to provide
-								accurate, current, and complete information
-								during the registration process and to update
-								such information to keep it accurate, current,
-								and complete. You are responsible for
-								safeguarding your password and account details,
-								and you accept full responsibility for all
-								activities that occur under your account.
+							<p className="text-sm font-light leading-relaxed">
+								By accessing and using TaskFlow (the &ldquo;Service&rdquo;), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								2. Acceptable Use Policy
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								2. Description of Service
 							</h2>
-							<p className="leading-relaxed text-sm">
-								You agree not to use TaskFlow for any unlawful
-								purpose or in any way that interrupts, damages,
-								or impairs the service. Prohibited behaviors
-								include, but are not limited to:
-							</p>
-							<ul className="list-disc pl-5 space-y-1 text-sm">
-								<li>
-									Uploading, storing, or transmitting
-									malicious code, viruses, or malware.
-								</li>
-								<li>
-									Attempting to gain unauthorized access to
-									our systems, servers, or user database.
-								</li>
-								<li>
-									Using automated tools (bots, crawlers,
-									scrapers) to access or harvest data without
-									permission.
-								</li>
-								<li>
-									Impersonating other persons or entities, or
-									falsifying your identity.
-								</li>
-							</ul>
-						</section>
-
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								3. Intellectual Property Rights
-							</h2>
-							<p className="leading-relaxed text-sm">
-								TaskFlow and its original content, features,
-								layout, and functionality are and will remain
-								the exclusive property of TaskFlow and its
-								licensors. Our trademarks, logos, and service
-								marks may not be used in connection with any
-								product or service without our prior written
-								consent.
+							<p className="text-sm font-light leading-relaxed">
+								TaskFlow is a project management and team collaboration platform. We provide tools for organizing tasks, tracking time, and managing team communication within organization-based workspaces.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								4. User Content
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								3. User Accounts
 							</h2>
-							<p className="leading-relaxed text-sm">
-								You retain all rights to any data, projects,
-								tasks, comments, or materials you upload or
-								input into TaskFlow (&ldquo;User
-								Content&rdquo;). By uploading User Content, you
-								grant us a worldwide, non-exclusive,
-								royalty-free license to host, store, and process
-								your content solely to provide the services to
-								you.
+							<p className="text-sm font-light leading-relaxed">
+								You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must provide accurate and complete information when creating an account.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								5. Termination
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								4. Acceptable Use
 							</h2>
-							<p className="leading-relaxed text-sm">
-								We reserve the right to suspend or terminate
-								your account and restrict your access to all or
-								part of TaskFlow at any time, with or without
-								cause, and with or without notice, effective
-								immediately. If you wish to terminate your
-								account, you may do so through your profile
-								settings or by contacting our support.
+							<p className="text-sm font-light leading-relaxed">
+								You agree not to use the Service for any unlawful purpose or in any way that interrupts, damages, or impairs the Service. Prohibited activities include attempting to gain unauthorized access to our systems or other users&apos; accounts.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								5. Intellectual Property
+							</h2>
+							<p className="text-sm font-light leading-relaxed">
+								The Service and its original content, features, and functionality are owned by MaYTaS and are protected by international copyright, trademark, and other intellectual property laws.
+							</p>
+						</section>
+
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
 								6. Limitation of Liability
 							</h2>
-							<p className="leading-relaxed text-sm">
-								In no event shall TaskFlow, its directors,
-								employees, partners, or agents be liable for any
-								indirect, incidental, special, consequential, or
-								punitive damages, including without limitation,
-								loss of profits, data, use, goodwill, or other
-								intangible losses, resulting from your access to
-								or use of, or inability to access or use, the
-								service.
+							<p className="text-sm font-light leading-relaxed">
+								In no event shall MaYTaS be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or in connection with your use of the Service.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								7. Changes to These Terms
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								7. Changes to Terms
 							</h2>
-							<p className="leading-relaxed text-sm">
-								We reserve the right to modify or replace these
-								Terms at any time. If a revision is material, we
-								will provide at least 30 days&apos; notice prior
-								to any new terms taking effect. By continuing to
-								access or use TaskFlow after those revisions
-								become effective, you agree to be bound by the
-								revised Terms.
+							<p className="text-sm font-light leading-relaxed">
+								We reserve the right to modify or replace these terms at any time. We will provide notice of any significant changes by posting the new terms on this page.
 							</p>
 						</section>
 
-						<section className="space-y-3 pt-4">
-							<h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-								8. Contact Information
+						<section>
+							<h2 className="text-lg font-bold text-foreground">
+								8. Contact Us
 							</h2>
-							<p className="leading-relaxed text-sm">
-								If you have any questions about these Terms of
-								Service, please contact us at
-								support@taskflow.example.com.
+							<p className="text-sm font-light leading-relaxed">
+								If you have any questions about these Terms, please contact us at support@taskflow.com.
 							</p>
 						</section>
 					</div>
 				</div>
 			</main>
+
 			<Footer />
 		</ScrollArea>
 	);
