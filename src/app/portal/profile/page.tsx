@@ -61,7 +61,7 @@ export default function ProfilePage() {
 	return (
 		<div className="p-6 sm:p-8 space-y-8 max-w-3xl mx-auto pb-12 w-full">
 			{/* Profile Details Card */}
-			<div className="p-6 bg-muted/20 border border-border rounded-3xl space-y-6">
+			<div className="p-6 bg-muted/20 border border-border rounded-lg space-y-6">
 				<div className="flex flex-col sm:flex-row items-center gap-4 border-b border-border pb-6">
 					<Avatar className="size-20 border-2 border-border">
 						<AvatarImage src={user?.image || ""} alt={user?.name || ""} />
@@ -93,7 +93,7 @@ export default function ProfilePage() {
 			</div>
 
 			{/* Danger Zone */}
-			<div className="p-6 bg-destructive/10 border border-destructive/20 rounded-3xl space-y-4">
+			<div className="p-6 bg-destructive/10 border border-destructive/20 rounded-lg space-y-4">
 				<h3 className="text-sm font-bold text-destructive uppercase tracking-wider">Danger Zone</h3>
 				<p className="text-xs text-foreground leading-relaxed font-light">
 					Permanently delete your account and all associated work data. This action is irreversible.
@@ -112,7 +112,7 @@ export default function ProfilePage() {
 
 			{/* Delete Confirm Dialog */}
 			<Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-				<DialogContent className="max-w-md bg-background border border-border text-foreground rounded-3xl p-6">
+				<DialogContent className="max-w-md bg-background border border-border text-foreground rounded-lg p-6">
 					<DialogHeader>
 						<DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
 							<Trash2 className="size-5 text-destructive" />

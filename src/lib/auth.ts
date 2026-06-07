@@ -49,7 +49,7 @@ export const authOptions: NextAuthOptions = {
 				const [user] = await db
 					.select()
 					.from(users)
-					.where(eq(users.email, credentials.email));
+					.where(eq(users.email, credentials.email.toLowerCase()));
 
 				if (!user?.hashedPassword) {
 					return null;
@@ -87,15 +87,23 @@ export const authOptions: NextAuthOptions = {
 		strategy: "jwt",
 	},
 	callbacks: {
-		async jwt({ token, user, trigger, session }) {
+		async jwt({ token, user, trigger }) {
 			if (user) {
 				token.id = String(user.id);
 				token.role = (user as { role?: string }).role || "ADMIN";
 				token.image = user.image;
 			}
-			if (trigger === "update" && session) {
-				if (session.image !== undefined) token.image = session.image;
-				if (session.name !== undefined) token.name = session.name;
+			if (trigger === "update") {
+				const [dbUser] = await db
+					.select()
+					.from(users)
+					.where(eq(users.id, Number(token.id)))
+					.limit(1);
+				if (dbUser) {
+					token.role = dbUser.role;
+					token.name = dbUser.name;
+					token.image = dbUser.image;
+				}
 			}
 			return token;
 		},

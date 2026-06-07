@@ -1,8 +1,9 @@
 import { Elysia, t } from "elysia";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { db, organizations, organizationMembers, users } from "@/lib/db";
+import { db, organizations, organizationMembers, users, projects, projectMembers, tasks, taskAssignees } from "@/lib/db";
 import { getAuthenticatedUser, checkOrgAccess } from "../auth-helper";
+import { sendRealtimeNotification } from "@/lib/ws";
 
 export const orgRoutes = new Elysia({ prefix: "/org" })
 	// Get all organizations the current user belongs to
@@ -35,7 +36,14 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 
 		if (user.role === "SUPER_ADMIN") {
 			const orgs = await db.select({ id: organizations.id, name: organizations.name }).from(organizations);
-			return orgs.map(o => ({ ...o, role: "SUPER_ADMIN" }));
+			return orgs.map(o => ({ 
+				...o, 
+				role: "SUPER_ADMIN",
+				permissions: JSON.stringify({
+					projects: { view: true, create: true, edit: true, delete: true },
+					tasks: { view: true, create: true, edit: true, delete: true },
+				})
+			}));
 		}
 
 		const members = await db
@@ -43,6 +51,7 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 				id: organizations.id,
 				name: organizations.name,
 				role: organizationMembers.role,
+				permissions: organizationMembers.permissions,
 			})
 			.from(organizationMembers)
 			.innerJoin(organizations, eq(organizationMembers.organizationId, organizations.id))
@@ -202,18 +211,29 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 				if (!existingUser) {
 					// Create new credential member account
 					const defaultPassword = body.password || "Member@123";
-					const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+					const hashedPassword = await bcrypt.hash(defaultPassword, 12);
 					
 					const [newUser] = await db
 						.insert(users)
 						.values({
 							name: body.name,
-							email: body.email,
+							email: body.email.toLowerCase(),
 							hashedPassword,
 							role: "MEMBER",
 						})
 						.returning();
 					existingUser = newUser;
+				} else if (existingUser.role === "MEMBER") {
+					const userOrgs = await db
+						.select()
+						.from(organizationMembers)
+						.where(eq(organizationMembers.userId, existingUser.id))
+						.limit(1);
+
+					if (userOrgs.length > 0) {
+						set.status = 400;
+						return { success: false, error: "A member can only belong to one organization at a time." };
+					}
 				}
 
 				// Check if already member of organization
@@ -262,7 +282,7 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 		}
 	)
 
-	// Update member permissions (restricted to organization ADMINs)
+	// Update member details and permissions (restricted to organization ADMINs)
 	.put(
 		"/:id/members/:userId",
 		async ({ params, body, set }) => {
@@ -273,19 +293,44 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 			try {
 				await checkOrgAccess(user.id, orgId, "ADMIN");
 
-				await db
-					.update(organizationMembers)
-					.set({
-						permissions: JSON.stringify(body.permissions),
-					})
-					.where(
-						and(
-							eq(organizationMembers.organizationId, orgId),
-							eq(organizationMembers.userId, targetUserId)
-						)
-					);
+				if (body.permissions !== undefined) {
+					await db
+						.update(organizationMembers)
+						.set({
+							permissions: JSON.stringify(body.permissions),
+						})
+						.where(
+							and(
+								eq(organizationMembers.organizationId, orgId),
+								eq(organizationMembers.userId, targetUserId)
+							)
+						);
 
-				return { success: true, message: "Member permissions updated successfully" };
+					// Trigger permissions_updated WS event to the target user
+					await sendRealtimeNotification(
+						targetUserId,
+						"Permissions Updated",
+						"Your organization permissions have been updated in real-time.",
+						"permissions_updated"
+					);
+				}
+
+				const userUpdate: { name?: string; hashedPassword?: string } = {};
+				if (body.name !== undefined) {
+					userUpdate.name = body.name;
+				}
+				if (body.password) {
+					userUpdate.hashedPassword = await bcrypt.hash(body.password, 12);
+				}
+
+				if (Object.keys(userUpdate).length > 0) {
+					await db
+						.update(users)
+						.set(userUpdate)
+						.where(eq(users.id, targetUserId));
+				}
+
+				return { success: true, message: "Member updated successfully" };
 			} catch (err) {
 				set.status = (err as Error).message.includes("Forbidden") ? 403 : 400;
 				return { success: false, error: (err as Error).message };
@@ -293,7 +338,9 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 		},
 		{
 			body: t.Object({
-				permissions: t.Any(),
+				permissions: t.Optional(t.Any()),
+				name: t.Optional(t.String()),
+				password: t.Optional(t.String()),
 			}),
 		}
 	)

@@ -33,7 +33,7 @@ export const app = new Elysia({ prefix: "/api" })
 				};
 			}
 
-			const hashedPassword = await bcrypt.hash(body.password, 10);
+			const hashedPassword = await bcrypt.hash(body.password, 12);
 
 			// First user in system is SUPER_ADMIN, others are ADMIN
 			const [userCountRow] = await db
@@ -46,7 +46,7 @@ export const app = new Elysia({ prefix: "/api" })
 				.insert(users)
 				.values({
 					name: body.name,
-					email: body.email,
+					email: body.email.toLowerCase(),
 					hashedPassword,
 					role: isFirstUser ? "SUPER_ADMIN" : "ADMIN",
 				})

@@ -156,7 +156,7 @@ export function TaskCreateForm({
 		createTaskMutation.isPending || updateTaskMutation.isPending;
 
 	return (
-		<DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+		<DialogContent className="max-w-md rounded-lg p-0 overflow-hidden max-h-[90vh] flex flex-col">
 			<DialogHeader className="p-6 pb-2">
 				<DialogTitle className="text-lg font-bold">
 					{isEditing ? "Edit Task" : "Create Task"}
@@ -186,7 +186,7 @@ export function TaskCreateForm({
 								id="new-task-title"
 								type="text"
 								placeholder="e.g. Setup PostgreSQL tables"
-								className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+								className="w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
 								autoFocus
 								{...register("title", {
 									required: "Task title is required",
@@ -210,7 +210,7 @@ export function TaskCreateForm({
 								id="new-task-desc"
 								type="text"
 								placeholder="e.g. Implement schema and indices"
-								className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+								className="w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
 								{...register("description")}
 							/>
 						</div>
@@ -240,7 +240,7 @@ export function TaskCreateForm({
 												field.onChange(val || "")
 											}
 										>
-											<SelectTrigger className="w-full h-11 rounded-2xl bg-muted/20 border-border px-4">
+											<SelectTrigger className="w-full h-11 rounded-lg bg-muted/20 border-border px-4">
 												<SelectValue placeholder="Select project..." />
 											</SelectTrigger>
 											<SelectContent>
@@ -294,7 +294,7 @@ export function TaskCreateForm({
 												field.onChange(val || "medium")
 											}
 										>
-											<SelectTrigger className="w-full h-11 rounded-2xl bg-muted/20 border-border px-4">
+											<SelectTrigger className="w-full h-11 rounded-lg bg-muted/20 border-border px-4">
 												<SelectValue placeholder="Select priority..." />
 											</SelectTrigger>
 											<SelectContent>
@@ -349,7 +349,7 @@ export function TaskCreateForm({
 												field.onChange(val || "todo")
 											}
 										>
-											<SelectTrigger className="w-full h-11 rounded-2xl bg-muted/20 border-border px-4">
+											<SelectTrigger className="w-full h-11 rounded-lg bg-muted/20 border-border px-4">
 												<SelectValue placeholder="Select status..." />
 											</SelectTrigger>
 											<SelectContent>
@@ -387,7 +387,7 @@ export function TaskCreateForm({
 								<Input
 									id="new-task-due"
 									type="date"
-									className="w-full text-sm rounded-2xl bg-muted/20 border-border h-11 px-4"
+									className="w-full text-sm rounded-lg bg-muted/20 border-border h-11 px-4"
 									{...register("dueDate")}
 								/>
 							</div>
@@ -403,7 +403,7 @@ export function TaskCreateForm({
 									type="number"
 									min="1"
 									placeholder="e.g. 90"
-									className="w-full text-sm rounded-2xl bg-muted/20 border-border h-11 px-4"
+									className="w-full text-sm rounded-lg bg-muted/20 border-border h-11 px-4"
 									{...register("estimatedMinutes")}
 								/>
 							</div>
@@ -414,7 +414,7 @@ export function TaskCreateForm({
 							<Label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1 block">
 								Assign Members
 							</Label>
-							<div className="flex gap-2 flex-wrap py-2 min-h-[44px] bg-muted/10 p-3 rounded-2xl border border-border/50">
+							<div className="flex gap-2 flex-wrap py-2 min-h-[44px] bg-muted/10 p-3 rounded-lg border border-border/50">
 								{members.length === 0 ? (
 									<span className="text-[10px] text-muted-foreground font-medium px-1">
 										No members available in this workspace

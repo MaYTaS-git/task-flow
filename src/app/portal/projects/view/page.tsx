@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
 	DndContext,
 	DragOverlay,
@@ -30,6 +30,7 @@ import { useProjects } from "@/hooks/use-projects";
 import { useTasks } from "@/hooks/use-tasks";
 import { useOrg } from "@/hooks/use-org";
 import { useSetHeader } from "@/contexts/header-context";
+import { useOrganization } from "@/contexts/organization-context";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -148,13 +149,22 @@ interface DraggableTaskCardProps {
 	onEdit: (task: Task) => void;
 	onDelete: (taskId: number) => void;
 	canEdit?: boolean;
+	canDelete?: boolean;
 }
 
-function DraggableTaskCard({ task, onOpen, onEdit, onDelete, canEdit }: DraggableTaskCardProps) {
+function DraggableTaskCard({
+	task,
+	onOpen,
+	onEdit,
+	onDelete,
+	canEdit,
+	canDelete,
+}: DraggableTaskCardProps) {
 	const { attributes, listeners, setNodeRef, transform, isDragging } =
 		useDraggable({
 			id: task.id,
 			data: { status: task.status },
+			disabled: !canEdit,
 		});
 
 	const style = transform
@@ -165,25 +175,39 @@ function DraggableTaskCard({ task, onOpen, onEdit, onDelete, canEdit }: Draggabl
 		<div
 			ref={setNodeRef}
 			style={style}
-			className={`p-3 bg-card border border-border rounded-xl space-y-2 cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 select-none group relative ${
+			className={`p-3 bg-card border border-border rounded-xl space-y-2 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 select-none group relative ${
+				canEdit ? "cursor-grab active:cursor-grabbing" : ""
+			} ${
 				isDragging ? "opacity-40 ring-2 ring-primary/40" : ""
 			}`}
 		>
 			<div className="flex items-start justify-between gap-2">
-				<span className="text-xs font-semibold leading-snug flex-1 min-w-0 break-words" {...listeners} {...attributes}>
+				<span
+					className="text-xs font-semibold leading-snug flex-1 min-w-0 break-words"
+					{...listeners}
+					{...attributes}
+				>
 					{task.title}
 				</span>
-				<div className="flex flex-col items-end gap-1 shrink-0">
-					<TaskPriorityBadge priority={task.priority} />
-				</div>
 			</div>
 			{task.description && (
-				<p className="text-[10px] text-muted-foreground line-clamp-2" {...listeners} {...attributes}>
+				<p
+					className="text-[10px] text-muted-foreground line-clamp-2"
+					{...listeners}
+					{...attributes}
+				>
 					{task.description}
 				</p>
 			)}
-			<div className="flex items-center justify-between" {...listeners} {...attributes}>
-				<TaskStatusBadge status={task.status} />
+			<div
+				className="flex items-center justify-between"
+				{...listeners}
+				{...attributes}
+			>
+				<div className="flex items-center gap-1.5">
+					<TaskStatusBadge status={task.status} />
+					<TaskPriorityBadge priority={task.priority} />
+				</div>
 				{task.assignees && task.assignees.length > 0 && (
 					<div className="flex -space-x-1 overflow-hidden">
 						{task.assignees.map((a) => (
@@ -216,32 +240,32 @@ function DraggableTaskCard({ task, onOpen, onEdit, onDelete, canEdit }: Draggabl
 						<Eye className="size-3" />
 					</Button>
 					{canEdit && (
-						<>
-							<Button
-								variant="ghost"
-								size="icon-xs"
-								className="size-6 text-muted-foreground hover:text-primary"
-								onClick={(e) => {
-									e.stopPropagation();
-									onEdit(task);
-								}}
-								title="Edit Task"
-							>
-								<Edit2 className="size-3" />
-							</Button>
-							<Button
-								variant="ghost"
-								size="icon-xs"
-								className="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-								onClick={(e) => {
-									e.stopPropagation();
-									onDelete(task.id);
-								}}
-								title="Delete Task"
-							>
-								<Trash2 className="size-3" />
-							</Button>
-						</>
+						<Button
+							variant="ghost"
+							size="icon-xs"
+							className="size-6 text-muted-foreground hover:text-primary"
+							onClick={(e) => {
+								e.stopPropagation();
+								onEdit(task);
+							}}
+							title="Edit Task"
+						>
+							<Edit2 className="size-3" />
+						</Button>
+					)}
+					{canDelete && (
+						<Button
+							variant="ghost"
+							size="icon-xs"
+							className="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+							onClick={(e) => {
+								e.stopPropagation();
+								onDelete(task.id);
+							}}
+							title="Delete Task"
+						>
+							<Trash2 className="size-3" />
+						</Button>
 					)}
 				</div>
 			)}
@@ -262,6 +286,7 @@ interface DroppableColumnProps {
 	onEditTask: (task: Task) => void;
 	onDeleteTask: (taskId: number) => void;
 	canEdit?: boolean;
+	canDelete?: boolean;
 	isOver?: boolean;
 }
 
@@ -275,6 +300,7 @@ function DroppableColumn({
 	onEditTask,
 	onDeleteTask,
 	canEdit,
+	canDelete,
 }: DroppableColumnProps) {
 	const { setNodeRef, isOver } = useDroppable({ id: columnId });
 
@@ -319,6 +345,7 @@ function DroppableColumn({
 								onEdit={onEditTask}
 								onDelete={onDeleteTask}
 								canEdit={canEdit}
+								canDelete={canDelete}
 							/>
 						))
 					)}
@@ -375,6 +402,8 @@ function ProjectDetailsContent() {
 	const searchParams = useSearchParams();
 	const projectId = parseInt(searchParams.get("id") || "");
 	const setHeaderData = useSetHeader();
+	const { activeOrg } = useOrganization();
+	const router = useRouter();
 
 	// Modal States
 	const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -417,8 +446,24 @@ function ProjectDetailsContent() {
 	const activeTimer = activeTimerQuery.data as ActiveTimer | null | undefined;
 
 	// RBAC
-	const userRole = orgDetailsQuery.data?.userRole ?? "";
-	const canEdit = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+	const isUserAdmin =
+		activeOrg?.role === "ADMIN" || activeOrg?.role === "SUPER_ADMIN";
+	const canViewProjects =
+		isUserAdmin || activeOrg?.parsedPermissions?.projects?.view !== false;
+	const canEditProject =
+		isUserAdmin || activeOrg?.parsedPermissions?.projects?.edit;
+	const canCreateTasks =
+		isUserAdmin || activeOrg?.parsedPermissions?.tasks?.create;
+	const canEditTasks =
+		isUserAdmin || activeOrg?.parsedPermissions?.tasks?.edit;
+	const canDeleteTasks =
+		isUserAdmin || activeOrg?.parsedPermissions?.tasks?.delete;
+
+	useEffect(() => {
+		if (activeOrg && !canViewProjects) {
+			router.replace("/portal/unauthorized");
+		}
+	}, [activeOrg, canViewProjects, router]);
 
 	// Org members for the assign form
 	const orgMembers = (orgDetailsQuery.data?.members || []) as ProjectMember[];
@@ -428,29 +473,34 @@ function ProjectDetailsContent() {
 	const unassignedOrgMembers = orgMembers.filter(
 		(om) => !projectMembersList.some((m) => m.id === om.id),
 	);
-// Timer ticker
-const [now, setNow] = useState<number>(0);
 
-useEffect(() => {
-	const timeout = setTimeout(() => setNow(Date.now()), 0);
-	return () => clearTimeout(timeout);
-}, []);
+	// Timer ticker
+	const [now, setNow] = useState<number>(0);
 
-useEffect(() => {
-	if (!activeTimer) return;
+	useEffect(() => {
+		const timeout = setTimeout(() => setNow(Date.now()), 0);
+		return () => clearTimeout(timeout);
+	}, []);
 
-	const interval = setInterval(() => {
-		setNow(Date.now());
-	}, 1000);
+	useEffect(() => {
+		if (!activeTimer) return;
 
-	return () => clearInterval(interval);
-}, [activeTimer]);
+		const interval = setInterval(() => {
+			setNow(Date.now());
+		}, 1000);
 
-const timerSeconds = activeTimer 
-	? Math.max(0, Math.floor((now - new Date(activeTimer.startTime).getTime()) / 1000))
-	: 0;
+		return () => clearInterval(interval);
+	}, [activeTimer]);
 
-// Header
+	const timerSeconds = activeTimer
+		? Math.max(
+				0,
+				Math.floor(
+					(now - new Date(activeTimer.startTime).getTime()) / 1000,
+				),
+			)
+		: 0;
+
 	const formatDuration = (sec: number) => {
 		const h = Math.floor(sec / 3600);
 		const m = Math.floor((sec % 3600) / 60);
@@ -503,14 +553,15 @@ const timerSeconds = activeTimer
 							</Button>
 						</div>
 					)}
-					<Button
-						variant="outline"
-						onClick={() => setShowNewTaskModal(true)}
-						size="sm"
-					>
-						<Plus className="size-4 mr-1" />
-						Add Task
-					</Button>
+					{canCreateTasks && (
+						<Button
+							onClick={() => setShowNewTaskModal(true)}
+							size="sm"
+						>
+							<Plus className="size-4 mr-1" />
+							New Task
+						</Button>
+					)}
 				</div>
 			),
 		});
@@ -522,6 +573,7 @@ const timerSeconds = activeTimer
 		timerSeconds,
 		stopTimerMutation,
 		projectId,
+		canCreateTasks,
 	]);
 
 	// ─── DnD Handlers ───────────────────────────────────────────────────────
@@ -561,6 +613,10 @@ const timerSeconds = activeTimer
 	});
 
 	// ─── Guard States ─────────────────────────────────────────────────────────
+
+	if (activeOrg && !canViewProjects) {
+		return null;
+	}
 
 	if (isNaN(projectId)) {
 		return (
@@ -620,7 +676,7 @@ const timerSeconds = activeTimer
 		<div className="p-4 sm:p-6 pb-12">
 			{/* Mobile Timer Banner */}
 			{activeTimer && activeTimer.projectId === projectId && (
-				<div className="md:hidden mb-4 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-between font-mono text-xs text-primary">
+				<div className="md:hidden mb-4 p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between font-mono text-xs text-primary">
 					<div className="flex items-center gap-2">
 						<Clock className="size-4 animate-pulse" />
 						<span>{formatDuration(timerSeconds)}</span>
@@ -790,7 +846,8 @@ const timerSeconds = activeTimer
 												setTaskToDelete(taskId);
 												setShowDeleteTaskConfirm(true);
 											}}
-											canEdit={canEdit}
+											canEdit={canEditTasks}
+											canDelete={canDeleteTasks}
 										/>
 									);
 								})}
@@ -817,18 +874,20 @@ const timerSeconds = activeTimer
 									{members.length}
 								</Badge>
 							</h2>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => setShowAddMemberModal(true)}
-								disabled={unassignedOrgMembers.length === 0}
-							>
-								<UserPlus className="size-3.5 mr-1" />
-								Add Member
-							</Button>
+							{isUserAdmin && (
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => setShowAddMemberModal(true)}
+									disabled={unassignedOrgMembers.length === 0}
+								>
+									<UserPlus className="size-3.5 mr-1" />
+									Add Member
+								</Button>
+							)}
 						</div>
 
-						<div className="bg-card border border-border rounded-2xl divide-y divide-border overflow-hidden">
+						<div className="bg-card border border-border rounded-lg divide-y divide-border overflow-hidden">
 							{members.length === 0 ? (
 								<div className="py-10 text-center text-xs text-muted-foreground">
 									No members assigned to this project yet.
@@ -859,23 +918,24 @@ const timerSeconds = activeTimer
 											<Badge className="bg-muted text-muted-foreground border border-border text-[10px] uppercase">
 												{member.role}
 											</Badge>
-											{canEdit && (
-												<Button
-													variant="ghost"
-													size="icon-sm"
-													onClick={() =>
-														setMemberToRemove({
-															id: member.id,
-															nameOrEmail:
-																member.name ||
-																member.email,
-														})
-													}
-													title="Remove Member"
-												>
-													<Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />
-												</Button>
-											)}
+											{isUserAdmin &&
+												member.id !== activeOrg?.id && (
+													<Button
+														variant="ghost"
+														size="icon-sm"
+														onClick={() =>
+															setMemberToRemove({
+																id: member.id,
+																nameOrEmail:
+																	member.name ||
+																	member.email,
+															})
+														}
+														title="Remove Member"
+													>
+														<Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />
+													</Button>
+												)}
 										</div>
 									</div>
 								))
@@ -888,7 +948,7 @@ const timerSeconds = activeTimer
 				<TabsContent value="details">
 					<div className="max-w-2xl space-y-6">
 						{/* Project meta */}
-						<div className="p-5 bg-card border border-border rounded-2xl space-y-3">
+						<div className="p-5 bg-card border border-border rounded-lg space-y-3">
 							<div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
 								Project Description
 							</div>
@@ -906,19 +966,23 @@ const timerSeconds = activeTimer
 						</div>
 
 						{/* Settings form */}
-						<div className="p-5 bg-card border border-border rounded-2xl">
-							<div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-4">
-								Project Settings
+						{canEditProject && (
+							<div className="p-5 bg-card border border-border rounded-lg">
+								<div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-4">
+									Project Settings
+								</div>
+								<ProjectSettingsForm
+									projectId={projectId}
+									initialName={project.name}
+									initialDescription={
+										project.description || ""
+									}
+									initialStatus={project.status}
+									onSuccess={() => {}}
+									onCancel={() => {}}
+								/>
 							</div>
-							<ProjectSettingsForm
-								projectId={projectId}
-								initialName={project.name}
-								initialDescription={project.description || ""}
-								initialStatus={project.status}
-								onSuccess={() => {}}
-								onCancel={() => {}}
-							/>
-						</div>
+						)}
 					</div>
 				</TabsContent>
 			</Tabs>
@@ -931,12 +995,16 @@ const timerSeconds = activeTimer
 					if (!open) setSelectedTaskId(null);
 				}}
 				activeTimer={activeTimer}
-				canEdit={canEdit}
+				canEdit={canEditTasks}
+				canDelete={canDeleteTasks}
 				onTaskUpdated={() => tasksQuery.refetch()}
 			/>
 
 			{/* ── Add Member Modal ──────────────────────────────────────────── */}
-			<Dialog open={showAddMemberModal} onOpenChange={setShowAddMemberModal}>
+			<Dialog
+				open={showAddMemberModal}
+				onOpenChange={setShowAddMemberModal}
+			>
 				<ProjectMemberAssignForm
 					projectId={projectId}
 					unassignedMembers={unassignedOrgMembers}
@@ -997,16 +1065,23 @@ const timerSeconds = activeTimer
 			</Dialog>
 
 			{/* ── Edit Task Modal ───────────────────────────────────────────── */}
-			{taskToEdit && (
-				<Dialog open={showEditTaskModal} onOpenChange={setShowEditTaskModal}>
+			{canEditTasks && taskToEdit && (
+				<Dialog
+					open={showEditTaskModal}
+					onOpenChange={setShowEditTaskModal}
+				>
 					<TaskCreateForm
 						projects={[{ id: projectId, name: project.name }]}
 						members={members}
 						fixedProjectId={projectId}
 						initialData={{
 							...taskToEdit,
-							assignees: taskToEdit.assignees?.map(a => a.id),
-							dueDate: taskToEdit.dueDate ? new Date(taskToEdit.dueDate).toISOString().split('T')[0] : ""
+							assignees: taskToEdit.assignees?.map((a) => a.id),
+							dueDate: taskToEdit.dueDate
+								? new Date(taskToEdit.dueDate)
+										.toISOString()
+										.split("T")[0]
+								: "",
 						}}
 						onSuccess={() => {
 							setShowEditTaskModal(false);
@@ -1022,17 +1097,21 @@ const timerSeconds = activeTimer
 			)}
 
 			{/* ── Delete Task Confirm ────────────────────────────────────────── */}
-			<Dialog
-				open={showDeleteTaskConfirm}
-				onOpenChange={(open) => !open && setShowDeleteTaskConfirm(false)}
-			>
-				<DialogContent className="max-w-md rounded-3xl p-6">
+			{canDeleteTasks && (
+				<Dialog
+					open={showDeleteTaskConfirm}
+					onOpenChange={(open) =>
+						!open && setShowDeleteTaskConfirm(false)
+					}
+				>
+				<DialogContent className="max-w-md rounded-lg p-6">
 					<DialogHeader>
 						<DialogTitle className="text-lg font-bold">
 							Delete Task
 						</DialogTitle>
 						<DialogDescription className="text-xs text-muted-foreground font-light mt-1">
-							Are you sure you want to delete this task? This action cannot be undone.
+							Are you sure you want to delete this task? This
+							action cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
@@ -1052,16 +1131,19 @@ const timerSeconds = activeTimer
 											setShowDeleteTaskConfirm(false);
 											setTaskToDelete(null);
 											tasksQuery.refetch();
-										}
+										},
 									});
 								}
 							}}
 						>
-							{deleteTaskMutation.isPending ? "Deleting..." : "Delete"}
+							{deleteTaskMutation.isPending
+								? "Deleting..."
+								: "Delete"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+			)}
 		</div>
 	);
 }
@@ -1081,4 +1163,3 @@ export default function ProjectDetailsPage() {
 		</Suspense>
 	);
 }
-

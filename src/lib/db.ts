@@ -10,7 +10,12 @@ import {
 } from "drizzle-orm/pg-core";
 import { serverEnv } from "@/constants/server.env";
 
-export const sql = postgres(serverEnv.DATABASE_URL);
+const globalForDb = globalThis as unknown as {
+	conn: postgres.Sql | undefined;
+};
+
+export const sql = globalForDb.conn || postgres(serverEnv.DATABASE_URL);
+if (process.env.NODE_ENV !== "production") globalForDb.conn = sql;
 
 export const db = drizzle(sql);
 

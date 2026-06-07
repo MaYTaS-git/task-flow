@@ -15,6 +15,7 @@ import { useProjects } from "@/hooks/use-projects";
 import { useOrg } from "@/hooks/use-org";
 import { useTasks } from "@/hooks/use-tasks";
 import { useSetHeader } from "@/contexts/header-context";
+import { useOrganization } from "@/contexts/organization-context";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -77,8 +78,24 @@ function formatDuration(sec: number): string {
 	return [h, m, s].map((v) => v.toString().padStart(2, "0")).join(":");
 }
 
+import { useRouter } from "next/navigation";
+
 export default function TasksPage() {
 	const setHeaderData = useSetHeader();
+	const { activeOrg } = useOrganization();
+	const router = useRouter();
+
+	const isUserAdmin = activeOrg?.role === "ADMIN" || activeOrg?.role === "SUPER_ADMIN";
+	const canViewTasks = isUserAdmin || activeOrg?.parsedPermissions?.tasks?.view !== false;
+	const canCreateTasks = isUserAdmin || activeOrg?.parsedPermissions?.tasks?.create;
+	const canEditTasks = isUserAdmin || activeOrg?.parsedPermissions?.tasks?.edit;
+	const canDeleteTasks = isUserAdmin || activeOrg?.parsedPermissions?.tasks?.delete;
+
+	useEffect(() => {
+		if (activeOrg && !canViewTasks) {
+			router.replace("/portal/unauthorized");
+		}
+	}, [activeOrg, canViewTasks, router]);
 
 	// Filters State
 	const [filterProjId, setFilterProjId] = useState<string>("all");
@@ -111,13 +128,9 @@ export default function TasksPage() {
 
 	const projects = React.useMemo(() => (projectsQuery.data || []) as Project[], [projectsQuery.data]);
 	const members = React.useMemo(() => (orgDetailsQuery.data?.members || []) as OrgMember[], [orgDetailsQuery.data?.members]);
-	const userRole = orgDetailsQuery.data?.userRole || "MEMBER";
 	const tasks = React.useMemo(() => (tasksQuery.data || []) as Task[], [tasksQuery.data]);
 	const isTasksLoading = tasksQuery.isLoading;
 	const activeTimer = activeTimerQuery.data;
-
-	// Determine if user can edit tasks
-	const canEdit = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
 	// Timer Ticker
 	const [now, setNow] = useState<number>(0);
@@ -143,6 +156,7 @@ export default function TasksPage() {
 
 	// Set Top Layout Header Data
 	useEffect(() => {
+		if (!canViewTasks) return;
 		setHeaderData({
 			title: "Workspace Tasks",
 			description:
@@ -165,20 +179,22 @@ export default function TasksPage() {
 							</Button>
 						</div>
 					)}
-					<Button
-						onClick={() => {
-							if (projects.length === 0) {
-								toast.error(
-									"Please create a project first before adding tasks.",
-								);
-								return;
-							}
-							setShowNewTaskModal(true);
-						}}
-						size="sm"
-					>
-						<Plus className="size-3.5 mr-1" /> New Task
-					</Button>
+					{canCreateTasks && (
+						<Button
+							onClick={() => {
+								if (projects.length === 0) {
+									toast.error(
+ 										"Please create a project first before adding tasks.",
+									);
+									return;
+								}
+								setShowNewTaskModal(true);
+							}}
+							size="sm"
+						>
+							<Plus className="size-3.5 mr-1" /> New Task
+						</Button>
+					)}
 				</div>
 			),
 		});
@@ -189,7 +205,13 @@ export default function TasksPage() {
 		activeTimer,
 		timerSeconds,
 		stopTimerMutation,
+		canCreateTasks,
+		canViewTasks,
 	]);
+
+	if (activeOrg && !canViewTasks) {
+		return null;
+	}
 
 	return (
 		<div className="flex flex-col min-w-0 bg-background">
@@ -319,7 +341,7 @@ export default function TasksPage() {
 						Loading tasks list...
 					</div>
 				) : tasks.length === 0 ? (
-					<div className="py-20 text-center border border-dashed border-border bg-muted/10 rounded-3xl p-8 max-w-md mx-auto space-y-4 animate-fade-in">
+					<div className="py-20 text-center border border-dashed border-border bg-muted/10 rounded-lg p-8 max-w-md mx-auto space-y-4 animate-fade-in">
 						<div className="p-3.5 bg-primary/10 border border-primary/20 rounded-full text-primary w-fit mx-auto">
 							<CheckSquare className="size-8" />
 						</div>
@@ -333,8 +355,7 @@ export default function TasksPage() {
 						</div>
 					</div>
 				) : (
-					<div className="bg-card border border-border rounded-3xl p-6 space-y-4 animate-fade-in-up">
-						<div className="border border-border rounded-2xl overflow-hidden">
+					<div className="border border-border bg-card/65 backdrop-blur-lg rounded-lg overflow-hidden animate-fade-in-up">
 							<Table>
 								<TableHeader className="bg-muted/30">
 									<TableRow className="hover:bg-transparent">
@@ -417,7 +438,7 @@ export default function TasksPage() {
 														</Button>
 													)}
 
-													{canEdit && (
+													{canEditTasks && (
 														<Button
 															variant="ghost"
 															size="icon-sm"
@@ -432,22 +453,23 @@ export default function TasksPage() {
 														</Button>
 													)}
 
-													<Button
-														variant="ghost"
-														size="icon-sm"
-														className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
-														onClick={() => setTaskToDelete(task.id)}
-														title="Delete Task"
-													>
-														<Trash2 className="size-3.5" />
-													</Button>
+													{canDeleteTasks && (
+														<Button
+															variant="ghost"
+															size="icon-sm"
+															className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
+															onClick={() => setTaskToDelete(task.id)}
+															title="Delete Task"
+														>
+															<Trash2 className="size-3.5" />
+														</Button>
+													)}
 												</div>
 											</TableCell>
 										</TableRow>
 									))}
 								</TableBody>
 							</Table>
-						</div>
 					</div>
 				)}
 			</div>
@@ -458,7 +480,8 @@ export default function TasksPage() {
 				open={selectedTaskId !== null}
 				onOpenChange={(open) => !open && setSelectedTaskId(null)}
 				activeTimer={activeTimer ?? null}
-				canEdit={canEdit}
+				canEdit={canEditTasks}
+				canDelete={canDeleteTasks}
 				onTaskUpdated={() => tasksQuery.refetch()}
 			/>
 
@@ -501,7 +524,7 @@ export default function TasksPage() {
 				open={taskToDelete !== null}
 				onOpenChange={(open) => !open && setTaskToDelete(null)}
 			>
-				<DialogContent className="max-w-md rounded-3xl p-6">
+				<DialogContent className="max-w-md rounded-lg p-6">
 					<DialogHeader>
 						<DialogTitle className="text-lg font-bold">
 							Delete Task

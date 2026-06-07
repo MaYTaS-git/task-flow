@@ -110,10 +110,34 @@ export function useProjects(projectId?: number) {
 			queryClient.invalidateQueries({ queryKey: ["projects", activeOrgId] });
 			toast.success("Project deleted successfully.");
 		},
+		onError: (err) => {
+			toast.error(err.message);
+		},
 	});
 
-	// Fetch projects for a specific user in the organization
-	const userProjectsQuery = (userId?: number) => useQuery({
+	return React.useMemo(() => ({
+		projectsQuery,
+		projectDetailsQuery,
+		createProjectMutation,
+		updateProjectMutation,
+		assignMemberMutation,
+		removeMemberMutation,
+		deleteProjectMutation,
+	}), [
+		projectsQuery,
+		projectDetailsQuery,
+		createProjectMutation,
+		updateProjectMutation,
+		assignMemberMutation,
+		removeMemberMutation,
+		deleteProjectMutation,
+	]);
+}
+
+// Fetch projects for a specific user in the organization
+export function useUserProjects(userId?: number) {
+	const { activeOrgId } = useOrganization();
+	return useQuery({
 		queryKey: ["user-projects", activeOrgId, userId],
 		queryFn: async () => {
 			if (!activeOrgId || !userId) return [];
@@ -126,24 +150,4 @@ export function useProjects(projectId?: number) {
 		},
 		enabled: !!activeOrgId && !!userId,
 	});
-
-	return React.useMemo(() => ({
-		projectsQuery,
-		projectDetailsQuery,
-		userProjectsQuery,
-		createProjectMutation,
-		updateProjectMutation,
-		assignMemberMutation,
-		removeMemberMutation,
-		deleteProjectMutation,
-	}), [
-		projectsQuery,
-		projectDetailsQuery,
-		userProjectsQuery,
-		createProjectMutation,
-		updateProjectMutation,
-		assignMemberMutation,
-		removeMemberMutation,
-		deleteProjectMutation,
-	]);
 }

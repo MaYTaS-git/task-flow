@@ -23,6 +23,10 @@ export interface ModulePermissions {
 		edit?: boolean;
 		delete?: boolean;
 	};
+	members?: {
+		view?: boolean;
+		manage?: boolean;
+	};
 	sessions?: {
 		start_stop?: boolean;
 		view_all?: boolean;
@@ -115,6 +119,23 @@ export async function checkOrgAccess(
 	}
 
 	return { role: member.role, permissions };
+}
+
+/**
+ * Retrieves all admins for a specific organization.
+ * Used for sending automated notifications.
+ */
+export async function getOrgAdmins(orgId: number) {
+	const admins = await db
+		.select({ userId: organizationMembers.userId })
+		.from(organizationMembers)
+		.where(
+			and(
+				eq(organizationMembers.organizationId, orgId),
+				eq(organizationMembers.role, "ADMIN")
+			)
+		);
+	return admins.map(a => a.userId);
 }
 
 /**

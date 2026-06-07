@@ -6,6 +6,9 @@ import { useOrg } from "@/hooks/use-org";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
 	DialogContent,
 	DialogHeader,
@@ -32,6 +35,10 @@ interface MemberPermissionsFormProps {
 			edit?: boolean;
 			delete?: boolean;
 		};
+		members?: {
+			view?: boolean;
+			manage?: boolean;
+		};
 	};
 	onSuccess?: () => void;
 	onCancel?: () => void;
@@ -46,6 +53,10 @@ interface MemberPermissionsInput {
 	tasksCreate: boolean;
 	tasksEdit: boolean;
 	tasksDelete: boolean;
+	membersView: boolean;
+	membersManage: boolean;
+	password?: string;
+	confirmPassword?: string;
 }
 
 export function MemberPermissionsForm({
@@ -61,7 +72,9 @@ export function MemberPermissionsForm({
 	const {
 		handleSubmit,
 		control,
-		formState: { isValid },
+		register,
+		watch,
+		formState: { errors, isValid },
 	} = useForm<MemberPermissionsInput>({
 		defaultValues: {
 			projectsView: perms.projects?.view ?? true,
@@ -72,14 +85,27 @@ export function MemberPermissionsForm({
 			tasksCreate: perms.tasks?.create ?? true,
 			tasksEdit: perms.tasks?.edit ?? true,
 			tasksDelete: perms.tasks?.delete ?? false,
+			membersView: perms.members?.view ?? true,
+			membersManage: perms.members?.manage ?? false,
+			password: "",
+			confirmPassword: "",
 		},
 		mode: "onChange",
 	});
 
+	// eslint-disable-next-line react-hooks/incompatible-library
+	const password = watch("password");
+
+
 	const onSubmit = async (data: MemberPermissionsInput) => {
 		try {
+			if (data.password && data.password !== data.confirmPassword) {
+				toast.error("Passwords do not match");
+				return;
+			}
 			await updatePermissionsMutation.mutateAsync({
 				userId,
+				password: data.password || undefined,
 				permissions: {
 					projects: {
 						view: data.projectsView,
@@ -93,6 +119,10 @@ export function MemberPermissionsForm({
 						edit: data.tasksEdit,
 						delete: data.tasksDelete,
 					},
+					members: {
+						view: data.membersView,
+						manage: data.membersManage,
+					},
 				},
 			});
 			if (onSuccess) onSuccess();
@@ -102,7 +132,7 @@ export function MemberPermissionsForm({
 	};
 
 	return (
-		<DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+		<DialogContent className="max-w-md rounded-lg p-0 overflow-hidden max-h-[90vh] flex flex-col">
 			<DialogHeader className="p-6 pb-2">
 				<DialogTitle className="text-lg font-bold">
 					Manage Permissions: {userNameOrEmail}
@@ -123,7 +153,7 @@ export function MemberPermissionsForm({
 							<h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] ml-1">
 								Project Control
 							</h4>
-							<div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-3xl border border-border/50">
+							<div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
 								<Controller
 									name="projectsView"
 									control={control}
@@ -195,7 +225,7 @@ export function MemberPermissionsForm({
 							<h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] ml-1">
 								Task Control
 							</h4>
-							<div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-3xl border border-border/50">
+							<div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
 								<Controller
 									name="tasksView"
 									control={control}
@@ -260,6 +290,106 @@ export function MemberPermissionsForm({
 										</label>
 									)}
 								/>
+							</div>
+						</div>
+
+						<div className="space-y-4">
+							<h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] ml-1">
+								Members Control
+							</h4>
+							<div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+								<Controller
+									name="membersView"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">View Members</span>
+										</label>
+									)}
+								/>
+								<Controller
+									name="membersManage"
+									control={control}
+									render={({ field }) => (
+										<label className="flex items-center gap-3 text-xs font-semibold text-foreground/80 cursor-pointer hover:text-foreground transition-colors group">
+											<Checkbox
+												checked={field.value}
+												onCheckedChange={(checked) =>
+													field.onChange(!!checked)
+												}
+												className="rounded-lg"
+											/>
+											<span className="group-hover:translate-x-0.5 transition-transform">Manage Members</span>
+										</label>
+									)}
+								/>
+							</div>
+						</div>
+
+						<div className="space-y-4">
+							<h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] ml-1">
+								Credentials Reset
+							</h4>
+							<div className="space-y-4 bg-muted/20 p-4 rounded-lg border border-border/50">
+								<div className="space-y-2">
+									<Label
+										htmlFor="member-password"
+										className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+									>
+										New Password (Optional)
+									</Label>
+									<Input
+										id="member-password"
+										type="password"
+										placeholder="Enter new password"
+										className="w-full text-xs rounded-lg bg-background border-border h-10 px-3"
+										{...register("password", {
+											minLength: { value: 6, message: "Password must be at least 6 characters" },
+										})}
+									/>
+									{errors.password && (
+										<p className="text-[10px] font-bold text-destructive uppercase tracking-wide ml-1">
+											{errors.password.message}
+										</p>
+									)}
+								</div>
+
+								<div className="space-y-2">
+									<Label
+										htmlFor="member-confirm-password"
+										className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+									>
+										Confirm Password
+									</Label>
+									<Input
+										id="member-confirm-password"
+										type="password"
+										placeholder="Confirm new password"
+										className="w-full text-xs rounded-lg bg-background border-border h-10 px-3"
+										{...register("confirmPassword", {
+											validate: (val) => {
+												if (password && !val) {
+													return "Please confirm your password";
+												}
+												if (password && val !== password) {
+													return "Passwords do not match";
+												}
+											},
+										})}
+									/>
+									{errors.confirmPassword && (
+										<p className="text-[10px] font-bold text-destructive uppercase tracking-wide ml-1">
+											{errors.confirmPassword.message}
+										</p>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>

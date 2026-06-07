@@ -6,6 +6,7 @@
 		"db:up": "docker compose -p task-manager-db up -d",
 		"db:down": "docker compose -p task-manager-db down",
 		"dev": "next dev",
+		"ws": "bun src/ws-server.ts",
 		"build": "next build",
 		"start": "next start",
 		"lint": "eslint"

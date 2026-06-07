@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Users, Plus, Shield, Trash2 } from "lucide-react";
+import { Plus, Shield, Trash2 } from "lucide-react";
 
 import { useOrg } from "@/hooks/use-org";
 import { useSetHeader } from "@/contexts/header-context";
@@ -30,6 +30,9 @@ import {
 } from "@/components/ui/table";
 import { MemberDetailSheet } from "@/components/common/member-detail-sheet";
 
+import { useRouter } from "next/navigation";
+import { useOrganization } from "@/contexts/organization-context";
+
 interface Member {
 	id: number;
 	name: string | null;
@@ -49,11 +52,17 @@ interface Member {
 			edit?: boolean;
 			delete?: boolean;
 		};
+		members?: {
+			view?: boolean;
+			manage?: boolean;
+		};
 	};
 }
 
 export default function MembersPage() {
 	const setHeaderData = useSetHeader();
+	const { activeOrg } = useOrganization();
+	const router = useRouter();
 	const [showInviteModal, setShowInviteModal] = useState(false);
 	const [showPermissionsModal, setShowPermissionsModal] = useState(false);
 	const [showDetailSheet, setShowDetailSheet] = useState(false);
@@ -68,10 +77,25 @@ export default function MembersPage() {
 	const userRole = orgDetailsQuery.data?.userRole || "MEMBER";
 	const isLoading = orgDetailsQuery.isLoading;
 	const isUserAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+	const canViewMembers = isUserAdmin || activeOrg?.parsedPermissions?.members?.view !== false;
 
 	useEffect(() => {
+		if (activeOrg && !canViewMembers) {
+			router.replace("/portal/unauthorized");
+		}
+	}, [activeOrg, canViewMembers, router]);
+
+	useEffect(() => {
+		if (!canViewMembers) return;
 		setHeaderData({
-			title: "Workspace Members",
+			title: (
+				<div className="flex items-center gap-2">
+					<span>Workspace Members</span>
+					{members.length > 0 && (
+						<Badge className="bg-primary text-primary-foreground font-bold">{members.length}</Badge>
+					)}
+				</div>
+			),
 			description:
 				"Manage roles, configure module specific RBAC permission blocks",
 			actions: isUserAdmin ? (
@@ -81,7 +105,11 @@ export default function MembersPage() {
 			) : null,
 		});
 		return () => setHeaderData(null);
-	}, [setHeaderData, isUserAdmin]);
+	}, [setHeaderData, isUserAdmin, members.length, canViewMembers]);
+
+	if (activeOrg && !canViewMembers) {
+		return null;
+	}
 
 	return (
 		<div className="p-6 sm:p-8 space-y-8 max-w-7xl mx-auto pb-12">
@@ -90,16 +118,7 @@ export default function MembersPage() {
 					Loading members...
 				</div>
 			) : (
-				<div className="bg-card border border-border rounded-3xl p-6 space-y-4 animate-fade-in-up">
-					<div className="flex items-center gap-2 text-foreground font-bold text-sm uppercase tracking-wider mb-2">
-						<Users className="size-4 text-primary" />
-						Workspace Users
-						<span className="text-xs font-normal text-muted-foreground ml-1">
-							({members.length})
-						</span>
-					</div>
-
-					<div className="border border-border rounded-2xl overflow-hidden">
+				<div className="border border-border bg-card/65 backdrop-blur-lg rounded-lg overflow-hidden animate-fade-in-up">
 						<Table>
 							<TableHeader className="bg-muted/30">
 								<TableRow className="hover:bg-transparent">
@@ -194,7 +213,6 @@ export default function MembersPage() {
 								)}
 							</TableBody>
 						</Table>
-					</div>
 				</div>
 			)}
 
@@ -252,7 +270,7 @@ export default function MembersPage() {
 				open={memberToRemove !== null}
 				onOpenChange={(open) => !open && setMemberToRemove(null)}
 			>
-				<DialogContent className="max-w-md rounded-3xl p-6">
+				<DialogContent className="max-w-md rounded-lg p-6">
 					<DialogHeader>
 						<DialogTitle className="text-lg font-bold">
 							Remove Member

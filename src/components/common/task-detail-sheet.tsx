@@ -8,11 +8,10 @@ import {
 	SheetContent,
 	SheetHeader,
 	SheetTitle,
-	SheetDescription,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectContent as SelectContentPrimitive, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { TaskStatusBadge, TaskPriorityBadge } from "@/components/common/status-badge";
 import { MemberAvatar } from "@/components/common/member-chip";
@@ -67,6 +66,7 @@ interface TaskDetailSheetProps {
 	onOpenChange: (open: boolean) => void;
 	activeTimer: ActiveTimer | null | undefined;
 	canEdit?: boolean;
+	canDelete?: boolean;
 	onTaskUpdated?: () => void;
 }
 
@@ -93,6 +93,7 @@ export function TaskDetailSheet({
 	onOpenChange,
 	activeTimer,
 	canEdit = false,
+	canDelete = false,
 	onTaskUpdated,
 }: TaskDetailSheetProps) {
 	const { updateTaskMutation, deleteTaskMutation, startTimerMutation, stopTimerMutation } = useTasks();
@@ -198,26 +199,30 @@ export function TaskDetailSheet({
 					<>
 						{/* Header */}
 						<SheetHeader className="px-6 pt-10 pb-4 border-b border-border shrink-0 relative">
-							{canEdit && (
+							{(canEdit || canDelete) && (
 								<div className="absolute top-4 right-14 flex items-center gap-1">
-									<Button
-										variant="ghost"
-										size="icon-sm"
-										onClick={() => setShowEditModal(true)}
-										title="Edit Task"
-										className="shrink-0"
-									>
-										<Edit2 className="size-4" />
-									</Button>
-									<Button
-										variant="ghost"
-										size="icon-sm"
-										onClick={() => setShowDeleteConfirm(true)}
-										title="Delete Task"
-										className="shrink-0 hover:text-destructive hover:bg-destructive/10"
-									>
-										<Trash2 className="size-4" />
-									</Button>
+									{canEdit && (
+										<Button
+											variant="ghost"
+											size="icon-sm"
+											onClick={() => setShowEditModal(true)}
+											title="Edit Task"
+											className="shrink-0"
+										>
+											<Edit2 className="size-4" />
+										</Button>
+									)}
+									{canDelete && (
+										<Button
+											variant="ghost"
+											size="icon-sm"
+											onClick={() => setShowDeleteConfirm(true)}
+											title="Delete Task"
+											className="shrink-0 hover:text-destructive hover:bg-destructive/10"
+										>
+											<Trash2 className="size-4" />
+										</Button>
+									)}
 								</div>
 							)}
 							<div className="flex items-center gap-2 flex-wrap mb-1">
@@ -344,9 +349,9 @@ export function TaskDetailSheet({
 									<Separator />
 
 									{/* Timer Control */}
-									<div className="p-4 bg-muted rounded-2xl flex items-center justify-between">
+									<div className="p-4 bg-muted rounded-lg flex items-center justify-between">
 										<div className="flex items-center gap-3">
-											<div className={`p-2 rounded-xl ${isActiveOnThisTask ? "bg-primary/20" : "bg-background"}`}>
+											<div className={`p-2 rounded-md ${isActiveOnThisTask ? "bg-primary/20" : "bg-background"}`}>
 												<Clock className={`size-4 ${isActiveOnThisTask ? "text-primary animate-pulse" : "text-muted-foreground"}`} />
 											</div>
 											<div>
@@ -446,9 +451,9 @@ export function TaskDetailSheet({
 						)}
 
 						{/* Delete Confirm Modal */}
-						{canEdit && (
+						{canDelete && (
 							<Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-								<DialogContent className="max-w-md rounded-3xl p-6">
+								<DialogContent className="max-w-md rounded-lg p-6">
 									<DialogHeader>
 										<DialogTitle className="text-lg font-bold">
 											Delete Task

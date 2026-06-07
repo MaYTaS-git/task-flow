@@ -51,6 +51,7 @@ import {
 	Sidebar,
 	SidebarContent,
 	SidebarHeader,
+	SidebarFooter,
 	SidebarMenu,
 	SidebarMenuItem,
 	SidebarMenuButton,
@@ -70,6 +71,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { HeaderProvider, useHeader } from "@/contexts/header-context";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { OrgCreateForm } from "@/components/forms/org-create-form";
+import { useNotifications } from "@/hooks/use-notifications";
+import { Badge } from "@/components/ui/badge";
 
 type LayoutProps = {
 	children: React.ReactNode;
@@ -135,7 +138,10 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 	const { toggleSidebar, state } = useSidebar();
 	const { headerData } = useHeader();
 
-	const { organizations, activeOrg, activeOrgId, setActiveOrgId } =
+	// Initialize real-time notifications
+	useNotifications();
+
+	const { organizations, activeOrg, activeOrgId, setActiveOrgId, isLoading: isOrgLoading } =
 		useOrganization();
 
 	const [showCreateOrgModal, setShowCreateOrgModal] = useState(false);
@@ -161,22 +167,39 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 		enabled: !!activeOrgId,
 	});
 
+	const { data: notificationsData = [] } = useQuery({
+		queryKey: ["notifications"],
+		queryFn: async () => {
+			const res = await api.notifications.get();
+			if (res.error || !res.data) return [];
+			return res.data as { id: number; read: string | null }[];
+		},
+		refetchInterval: 10000, // Poll every 10 seconds for notifications
+	});
+
+	const unreadNotificationsCount = notificationsData.filter(n => !n.read).length;
+
+	const isUserAdmin = activeOrg?.role === "ADMIN" || activeOrg?.role === "SUPER_ADMIN";
+	const canViewProjects = isUserAdmin || activeOrg?.parsedPermissions?.projects?.view !== false;
+	const canViewTasks = isUserAdmin || activeOrg?.parsedPermissions?.tasks?.view !== false;
+	const canViewMembers = isUserAdmin || activeOrg?.parsedPermissions?.members?.view !== false;
+
 	const navItems = [
 		{ name: "Dashboard", href: "/portal/dashboard", icon: LayoutGrid },
-		{
+		...(canViewProjects ? [{
 			name: "Projects",
 			href: "/portal/projects",
 			icon: FolderGit2,
 			hasSubmenu: projects.length > 0,
-		},
-		{ name: "Members", href: "/portal/members", icon: Users },
-		{ name: "Tasks", href: "/portal/tasks", icon: CheckSquare },
+		}] : []),
+		...(canViewMembers ? [{ name: "Members", href: "/portal/members", icon: Users }] : []),
+		...(canViewTasks ? [{ name: "Tasks", href: "/portal/tasks", icon: CheckSquare }] : []),
 		{ name: "Notifications", href: "/portal/notifications", icon: Bell },
 	];
 
 	return (
-		<div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
-			<Sidebar className="border-r border-border bg-sidebar">
+		<div className="flex h-screen w-full overflow-hidden bg-background/30 backdrop-blur-3xl text-foreground">
+			<Sidebar className="border-r border-border/40 bg-sidebar/50">
 				<SidebarHeader className="flex flex-row items-center justify-between p-4 border-b border-border h-20">
 					<Link
 						href="/portal/dashboard"
@@ -206,13 +229,29 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 						<div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider px-3 mb-1">
 							Workspace
 						</div>
-						{organizations.length > 0 ? (
+						{isOrgLoading ? (
+							<div className="flex items-center justify-center p-2">
+								<Spinner className="size-4 text-muted-foreground" />
+							</div>
+						) : activeOrg?.role === "MEMBER" ? (
+							<div className="flex items-center justify-between px-3 py-2 bg-muted/20 border border-border/40 rounded-lg max-w-full">
+								<div className="flex items-center gap-2 max-w-[70%]">
+									<Building2 className="size-4 text-primary shrink-0" />
+									<span className="truncate text-xs font-semibold text-foreground/80">
+										{activeOrg?.name}
+									</span>
+								</div>
+								<Badge variant="outline" className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground border-border bg-background/50 scale-90 shrink-0">
+									Workspace
+								</Badge>
+							</div>
+						) : organizations.length > 0 ? (
 							<DropdownMenu>
 								<DropdownMenuTrigger
 									render={
 										<Button
 											variant="outline"
-											className="w-full flex items-center justify-between px-3 py-2 text-left rounded-xl cursor-pointer"
+											className="w-full flex items-center justify-between px-3 py-2 text-left rounded-lg cursor-pointer"
 										/>
 									}
 								>
@@ -225,14 +264,14 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 									<ChevronDown className="size-4 text-muted-foreground shrink-0" />
 								</DropdownMenuTrigger>
 								<DropdownMenuPortal>
-									<DropdownMenuContent className="w-[var(--anchor-width)] min-w-48 p-1.5 rounded-2xl">
+									<DropdownMenuContent className="w-[var(--anchor-width)] min-w-48 p-1.5 rounded-lg">
 										{organizations.map((org) => (
 											<DropdownMenuItem
 												key={org.id}
 												onClick={() =>
 													setActiveOrgId(org.id)
 												}
-												className="cursor-pointer rounded-xl text-xs"
+												className="cursor-pointer rounded-md text-xs"
 											>
 												<Building2 className="size-3.5 text-muted-foreground mr-2" />
 												{org.name}
@@ -243,7 +282,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 											onClick={() =>
 												setShowCreateOrgModal(true)
 											}
-											className="text-primary focus:bg-primary/5 cursor-pointer font-medium rounded-xl text-xs"
+											className="text-primary focus:bg-primary/5 cursor-pointer font-medium rounded-md text-xs"
 										>
 											<Plus className="size-4 mr-1.5" />
 											Create Org
@@ -276,16 +315,21 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 								const Icon = item.icon;
 								return (
 									<SidebarMenuItem key={item.name}>
-										<div className="flex items-center justify-between w-full">
+										<div className="flex items-center justify-between w-full relative">
 											<SidebarMenuButton
 												render={
 													<Link href={item.href} />
 												}
 												isActive={isActive}
-												className="flex-1 transition-all duration-150"
+												className="flex-1 transition-all duration-150 relative"
 											>
 												<Icon className="size-4 mr-2" />
 												<span>{item.name}</span>
+												{item.name === "Notifications" && unreadNotificationsCount > 0 && (
+													<span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:top-1 group-data-[collapsible=icon]:right-1 group-data-[collapsible=icon]:h-3.5 group-data-[collapsible=icon]:min-w-3.5 group-data-[collapsible=icon]:text-[8px] group-data-[collapsible=icon]:p-0 animate-pulse">
+														{unreadNotificationsCount}
+													</span>
+												)}
 											</SidebarMenuButton>
 
 											{item.hasSubmenu && (
@@ -334,12 +378,47 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 						</SidebarMenu>
 					</div>
 				</SidebarContent>
+
+				<SidebarFooter className="p-3 border-t border-border/40 bg-sidebar/20">
+					<div className="flex items-center justify-between gap-2 w-full group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-3 group-data-[collapsible=icon]:p-0">
+						{/* User profile chip */}
+						<Link href="/portal/profile" title="My Profile" className="flex-1 min-w-0 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:flex-none">
+							<div className="flex items-center gap-2 px-2 py-1.5 bg-muted/30 border border-border/40 rounded-full hover:border-primary/50 hover:bg-muted/50 transition-all duration-200 outline-none group cursor-pointer hover:shadow-sm group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent">
+								<Avatar className="size-7 shrink-0">
+									<AvatarImage
+										src={user?.image || ""}
+										alt={user?.name || ""}
+									/>
+									<AvatarFallback className="text-[10px]">
+										{user?.name
+											? user.name[0].toUpperCase()
+											: "U"}
+									</AvatarFallback>
+								</Avatar>
+								<span className="text-xs font-semibold text-foreground/80 pr-1 group-hover:text-foreground transition-colors truncate block group-data-[collapsible=icon]:hidden">
+									{user?.name || "User Portal"}
+								</span>
+							</div>
+						</Link>
+						
+						{/* Logout button */}
+						<Button
+							variant="outline"
+							size="icon-sm"
+							onClick={() => setShowLogoutConfirm(true)}
+							title="Log Out"
+							className="size-8 rounded-full shrink-0 transition-all duration-150 hover:border-destructive/50 hover:text-destructive group-data-[collapsible=icon]:size-7"
+						>
+							<LogOut className="size-3.5 group-data-[collapsible=icon]:size-3" />
+						</Button>
+					</div>
+				</SidebarFooter>
 			</Sidebar>
 
 			{/* Main Content Pane */}
 			<div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 				{/* Top Header */}
-				<header className="h-20 border-b border-border bg-background/80 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-20">
+				<header className="h-20 border-b border-border/40 bg-background/20 backdrop-blur-xl px-6 flex items-center justify-between shrink-0 z-20">
 					{/* Left: Open sidebar button when closed + Page title & description */}
 					<div className="flex items-center gap-4 min-w-0">
 						{state === "collapsed" && (
@@ -366,48 +445,23 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 						)}
 					</div>
 
-					{/* Right: page actions + theme selector + user profile chip + logout */}
+					{/* Right: page actions + theme selector */}
 					<div className="flex items-center gap-3 shrink-0">
 						{headerData?.actions && (
 							<div className="flex items-center gap-2">
 								{headerData.actions}
 							</div>
 						)}
+
 						<ThemeSelector />
-
-						{/* User profile chip */}
-						<Link href="/portal/profile" title="My Profile">
-							<div className="flex items-center gap-2 px-2 py-1 bg-muted border border-border rounded-full hover:border-primary/50 transition-all duration-200 outline-none group cursor-pointer hover:shadow-sm">
-								<Avatar className="size-7">
-									<AvatarImage
-										src={user?.image || ""}
-										alt={user?.name || ""}
-									/>
-									<AvatarFallback className="text-[10px]">
-										{user?.name
-											? user.name[0].toUpperCase()
-											: "U"}
-									</AvatarFallback>
-								</Avatar>
-								<span className="text-xs font-semibold text-foreground/80 pr-2 group-hover:text-foreground transition-colors max-w-[120px] truncate inline-block">
-									{user?.name || "User Portal"}
-								</span>
-							</div>
-						</Link>
-
-						<Button
-							variant="outline"
-							size="icon"
-							onClick={() => setShowLogoutConfirm(true)}
-							title="Log Out"
-							className="transition-all duration-150 hover:border-destructive/50 hover:text-destructive"
-						>
-							<LogOut className="size-4" />
-						</Button>
 					</div>
 				</header>
 
-				{activeOrgId === null || organizations.length === 0 ? (
+				{isOrgLoading ? (
+					<div className="flex-1 flex items-center justify-center">
+						<Spinner className="size-10 text-muted-foreground" />
+					</div>
+				) : activeOrgId === null || organizations.length === 0 ? (
 					<div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
 						<div className="p-4 bg-primary/10 border border-primary/20 rounded-full text-primary animate-breathe">
 							<Building2 className="size-12" />
@@ -422,14 +476,20 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 								tasks, members, and notifications.
 							</p>
 						</div>
-						<Button
-							onClick={() => setShowCreateOrgModal(true)}
-							size="lg"
-							className="animate-fade-in-up"
-						>
-							<Plus className="size-4 mr-2" />
-							Create Organization
-						</Button>
+						{((user as unknown) as { role?: string })?.role === "MEMBER" ? (
+							<p className="text-xs text-muted-foreground font-medium animate-fade-in-up">
+								Please contact your workspace administrator to invite you to an organization.
+							</p>
+						) : (
+							<Button
+								onClick={() => setShowCreateOrgModal(true)}
+								size="lg"
+								className="animate-fade-in-up"
+							>
+								<Plus className="size-4 mr-2" />
+								Create Organization
+							</Button>
+						)}
 					</div>
 				) : (
 					<ScrollArea className="h-[calc(100vh-5rem)] w-full">
@@ -454,7 +514,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 				open={showLogoutConfirm}
 				onOpenChange={setShowLogoutConfirm}
 			>
-				<DialogContent className="max-w-sm rounded-3xl p-6">
+				<DialogContent className="max-w-sm rounded-lg p-6">
 					<DialogHeader>
 						<div className="flex items-center gap-3 mb-1">
 							<div className="p-2 bg-destructive/10 rounded-full">
@@ -520,3 +580,4 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 };
 
 export default Layout;
+

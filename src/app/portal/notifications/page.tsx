@@ -96,7 +96,6 @@ export default function NotificationsPage() {
 				<Button
 					onClick={() => readAllMutation.mutate()}
 					disabled={readAllMutation.isPending}
-					variant="outline"
 					size="sm"
 				>
 					<Check className="size-3.5 mr-1" />
@@ -112,7 +111,7 @@ export default function NotificationsPage() {
 			{isLoading ? (
 				<div className="py-20 text-center text-xs text-muted-foreground font-light">Loading inbox...</div>
 			) : notifications.length === 0 ? (
-				<div className="py-20 text-center border border-dashed border-border bg-muted/30 rounded-3xl p-8 max-w-md mx-auto space-y-4">
+				<div className="py-20 text-center border border-dashed border-border bg-muted/30 rounded-lg p-8 max-w-md mx-auto space-y-4">
 					<div className="p-3.5 bg-primary/10 border border-primary/20 rounded-full text-primary w-fit mx-auto">
 						<Bell className="size-8" />
 					</div>
@@ -124,8 +123,7 @@ export default function NotificationsPage() {
 					</div>
 				</div>
 			) : (
-				<div className="bg-card border border-border rounded-3xl p-6 space-y-4">
-					<div className="border border-border rounded-2xl overflow-hidden">
+				<div className="border border-border bg-card/65 backdrop-blur-lg rounded-lg overflow-hidden">
 						<Table>
 							<TableHeader className="bg-muted/30">
 								<TableRow className="hover:bg-transparent">
@@ -176,7 +174,6 @@ export default function NotificationsPage() {
 								))}
 							</TableBody>
 						</Table>
-					</div>
 				</div>
 			)}
 		</div>

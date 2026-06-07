@@ -32,6 +32,9 @@ import {
 import { ProjectStatusBadge } from "@/components/common/status-badge";
 import { ProjectCreateForm } from "@/components/forms/project-create-form";
 import { Progress } from "@/components/ui/progress";
+import { useOrganization } from "@/contexts/organization-context";
+
+import { useRouter } from "next/navigation";
 
 interface Project {
 	id: number;
@@ -52,6 +55,8 @@ const PROJECT_STATUSES = [
 
 export default function ProjectsPage() {
 	const setHeaderData = useSetHeader();
+	const { activeOrg } = useOrganization();
+	const router = useRouter();
 	const [showNewProjectModal, setShowNewProjectModal] = useState(false);
 
 	const { projectsQuery, deleteProjectMutation, updateProjectMutation } =
@@ -59,21 +64,38 @@ export default function ProjectsPage() {
 	const projects = (projectsQuery.data || []) as Project[];
 	const isLoading = projectsQuery.isLoading;
 
+	const isUserAdmin = activeOrg?.role === "ADMIN" || activeOrg?.role === "SUPER_ADMIN";
+	const canViewProjects = isUserAdmin || activeOrg?.parsedPermissions?.projects?.view !== false;
+	const canCreateProjects = isUserAdmin || activeOrg?.parsedPermissions?.projects?.create;
+	const canEditProjects = isUserAdmin || activeOrg?.parsedPermissions?.projects?.edit;
+	const canDeleteProjects = isUserAdmin || activeOrg?.parsedPermissions?.projects?.delete;
+
+	useEffect(() => {
+		if (activeOrg && !canViewProjects) {
+			router.replace("/portal/unauthorized");
+		}
+	}, [activeOrg, canViewProjects, router]);
+
 	const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
 
 	useEffect(() => {
+		if (!canViewProjects) return;
 		setHeaderData({
 			title: "Organization Projects",
 			description:
 				"Manage workspaces, status, timeline and configure project boards",
-			actions: (
+			actions: canCreateProjects ? (
 				<Button onClick={() => setShowNewProjectModal(true)} size="sm">
 					<Plus className="size-3.5 mr-1" /> New Project
 				</Button>
-			),
+			) : null,
 		});
 		return () => setHeaderData(null);
-	}, [setHeaderData]);
+	}, [setHeaderData, canCreateProjects, canViewProjects]);
+
+	if (activeOrg && !canViewProjects) {
+		return null;
+	}
 
 	const handleStatusChange = (
 		projectId: number,
@@ -95,7 +117,7 @@ export default function ProjectsPage() {
 					Loading organization projects...
 				</div>
 			) : projects.length === 0 ? (
-				<div className="py-20 text-center border border-dashed border-border bg-muted/10 rounded-3xl p-8 max-w-md mx-auto space-y-4 animate-fade-in">
+				<div className="py-20 text-center border border-dashed border-border bg-muted/10 rounded-lg p-8 max-w-md mx-auto space-y-4 animate-fade-in">
 					<div className="p-3.5 bg-primary/10 border border-primary/20 rounded-full text-primary w-fit mx-auto">
 						<FolderGit2 className="size-8" />
 					</div>
@@ -106,12 +128,14 @@ export default function ProjectsPage() {
 							workspace.
 						</p>
 					</div>
-					<Button
-						onClick={() => setShowNewProjectModal(true)}
-						size="sm"
-					>
-						<Plus className="size-4 mr-1.5" /> Create Project
-					</Button>
+					{canCreateProjects && (
+						<Button
+							onClick={() => setShowNewProjectModal(true)}
+							size="sm"
+						>
+							<Plus className="size-4 mr-1.5" /> Create Project
+						</Button>
+					)}
 				</div>
 			) : (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
@@ -136,64 +160,70 @@ export default function ProjectsPage() {
 													e.preventDefault()
 												}
 											>
-												<DropdownMenu>
-													<DropdownMenuTrigger
-														render={
-															<Button
-																type="button"
-																variant={
-																	"ghost"
-																}
-																size={"sm"}
-																className="flex items-center gap-1 focus:outline-none cursor-pointer"
-																onClick={(
-																	e,
-																) => {
-																	e.preventDefault();
-																	e.stopPropagation();
-																}}
-															/>
-														}
-													>
-														<ProjectStatusBadge
-															status={
-																project.status
+												{canEditProjects ? (
+													<DropdownMenu>
+														<DropdownMenuTrigger
+															render={
+																<Button
+																	type="button"
+																	variant={
+																		"ghost"
+																	}
+																	size={"sm"}
+																	className="flex items-center gap-1 focus:outline-none cursor-pointer"
+																	onClick={(
+																		e,
+																	) => {
+																		e.preventDefault();
+																		e.stopPropagation();
+																	}}
+																/>
 															}
-														/>
-														<ChevronDown className="size-3 text-muted-foreground ml-0.5" />
-													</DropdownMenuTrigger>
-													<DropdownMenuPortal>
-														<DropdownMenuContent
-															className="min-w-36 p-1 rounded-xl"
-															align="end"
 														>
-															{PROJECT_STATUSES.map(
-																(s) => (
-																	<DropdownMenuItem
-																		key={
-																			s.value
-																		}
-																		onClick={(
-																			e,
-																		) => {
-																			e.stopPropagation();
-																			handleStatusChange(
-																				project.id,
-																				project,
-																				s.value,
-																			);
-																		}}
-																		className="cursor-pointer rounded-lg text-xs"
-																	>
-																		{
-																			s.label
-																		}
-																	</DropdownMenuItem>
-																),
-															)}
-														</DropdownMenuContent>
-													</DropdownMenuPortal>
-												</DropdownMenu>
+															<ProjectStatusBadge
+																status={
+																	project.status
+																}
+															/>
+															<ChevronDown className="size-3 text-muted-foreground ml-0.5" />
+														</DropdownMenuTrigger>
+														<DropdownMenuPortal>
+															<DropdownMenuContent
+																className="min-w-36 p-1 rounded-xl"
+																align="end"
+															>
+																{PROJECT_STATUSES.map(
+																	(s) => (
+																		<DropdownMenuItem
+																			key={
+																				s.value
+																			}
+																			onClick={(
+																				e,
+																			) => {
+																				e.stopPropagation();
+																				handleStatusChange(
+																					project.id,
+																					project,
+																					s.value,
+																				);
+																			}}
+																			className="cursor-pointer rounded-lg text-xs"
+																		>
+																			{
+																				s.label
+																			}
+																		</DropdownMenuItem>
+																	),
+																)}
+															</DropdownMenuContent>
+														</DropdownMenuPortal>
+													</DropdownMenu>
+												) : (
+													<ProjectStatusBadge
+														status={project.status}
+													/>
+												)}
 											</div>
 										</div>
 										<CardTitle className="text-sm font-bold leading-snug mt-2">
@@ -237,19 +267,21 @@ export default function ProjectsPage() {
 												project.createdAt,
 											).toLocaleDateString()}
 										</span>
-										<Button
-											variant="ghost"
-											size="icon-sm"
-											onClick={(e) => {
-												e.preventDefault();
-												e.stopPropagation();
-												setProjectToDelete(project.id);
-											}}
-											title="Delete Project"
-											className="hover:text-destructive hover:bg-destructive/10"
-										>
-											<Trash2 className="size-3.5" />
-										</Button>
+										{canDeleteProjects && (
+											<Button
+												variant="ghost"
+												size="icon-sm"
+												onClick={(e) => {
+													e.preventDefault();
+													e.stopPropagation();
+													setProjectToDelete(project.id);
+												}}
+												title="Delete Project"
+												className="hover:text-destructive hover:bg-destructive/10"
+											>
+												<Trash2 className="size-3.5" />
+											</Button>
+										)}
 									</CardFooter>
 								</Card>
 							</Link>
@@ -274,7 +306,7 @@ export default function ProjectsPage() {
 				open={projectToDelete !== null}
 				onOpenChange={(open) => !open && setProjectToDelete(null)}
 			>
-				<DialogContent className="max-w-md rounded-3xl p-6">
+				<DialogContent className="max-w-md rounded-lg p-6">
 					<DialogHeader>
 						<DialogTitle className="text-lg font-bold">
 							Delete Project

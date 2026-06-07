@@ -75,7 +75,7 @@ export function ProjectSettingsForm({
 					<Input
 						id="proj-sett-name"
 						type="text"
-						className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+						className="w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
 						{...register("name", {
 							required: "Project title is required",
 						})}
@@ -97,7 +97,7 @@ export function ProjectSettingsForm({
 					<Input
 						id="proj-sett-desc"
 						type="text"
-						className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+						className="w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
 						{...register("description")}
 					/>
 				</div>
@@ -125,7 +125,7 @@ export function ProjectSettingsForm({
 									field.onChange(val || "planning")
 								}
 							>
-								<SelectTrigger className="w-full h-11 rounded-2xl bg-muted/20 border-border px-4">
+								<SelectTrigger className="w-full h-11 rounded-lg bg-muted/20 border-border px-4">
 									<SelectValue placeholder="Select status..." />
 								</SelectTrigger>
 								<SelectContent>
@@ -153,13 +153,13 @@ export function ProjectSettingsForm({
 					type="button"
 					variant="ghost"
 					onClick={onCancel}
-					className="text-muted-foreground hover:text-foreground rounded-2xl px-6"
+					className="text-muted-foreground hover:text-foreground rounded-lg px-6"
 				>
 					Cancel
 				</Button>
 				<Button
 					type="submit"
-					className="rounded-2xl px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+					className="rounded-lg px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
 					disabled={updateProjectMutation.isPending || !isValid}
 				>
 					{updateProjectMutation.isPending ? (

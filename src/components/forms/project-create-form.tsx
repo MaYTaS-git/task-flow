@@ -90,7 +90,7 @@ export function ProjectCreateForm({
 		createProjectMutation.isPending || updateProjectMutation.isPending;
 
 	return (
-		<DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+		<DialogContent className="max-w-md rounded-lg p-0 overflow-hidden max-h-[90vh] flex flex-col">
 			<DialogHeader className="p-6 pb-2">
 				<DialogTitle className="text-lg font-bold">
 					{isEditing ? "Edit Project" : "Create Project"}
@@ -120,7 +120,7 @@ export function ProjectCreateForm({
 								id="proj-name"
 								type="text"
 								placeholder="e.g. Mobile App Redesign"
-								className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+								className="w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
 								autoFocus
 								{...register("name", {
 									required: "Project title is required",
@@ -144,7 +144,7 @@ export function ProjectCreateForm({
 								id="proj-desc"
 								type="text"
 								placeholder="e.g. Migration of layout schemas to tailwind"
-								className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+								className="w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
 								{...register("description")}
 							/>
 						</div>
@@ -178,7 +178,7 @@ export function ProjectCreateForm({
 											field.onChange(val || "planning")
 										}
 									>
-										<SelectTrigger className="w-full h-11 rounded-2xl bg-muted/20 border-border px-4">
+										<SelectTrigger className="w-full h-11 rounded-lg bg-muted/20 border-border px-4">
 											<SelectValue placeholder="Select status..." />
 										</SelectTrigger>
 										<SelectContent>

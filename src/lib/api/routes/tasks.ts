@@ -6,8 +6,10 @@ import {
 	taskAssignees,
 	taskWorkSessions,
 	users,
+	projectMembers,
+	projects,
 } from "@/lib/db";
-import { getAuthenticatedUser, checkProjectAccess, checkTaskAccess } from "../auth-helper";
+import { getAuthenticatedUser, checkProjectAccess, checkTaskAccess, getOrgAdmins } from "../auth-helper";
 import { sendRealtimeNotification } from "@/lib/ws";
 
 export const taskRoutes = new Elysia({ prefix: "/tasks" })
@@ -207,14 +209,26 @@ export const taskRoutes = new Elysia({ prefix: "/tasks" })
 
 					// Send notifications to assignees
 					for (const uid of body.assignees) {
-						if (uid !== user.id) {
-							await sendRealtimeNotification(
-								uid,
-								"New Task Assigned",
-								`You have been assigned to: "${task.title}"`,
-								"task_assigned"
-							);
-						}
+						await sendRealtimeNotification(
+							uid,
+							"New Task Assigned",
+							`You have been assigned to: "${task.title}"`,
+							"task_assigned"
+						);
+					}
+				}
+
+				// Notify Admins
+				const [project] = await db.select({ orgId: projects.organizationId }).from(projects).where(eq(projects.id, projectId)).limit(1);
+				if (project) {
+					const admins = await getOrgAdmins(project.orgId);
+					for (const adminId of admins) {
+						await sendRealtimeNotification(
+							adminId,
+							"Task Created",
+							`User ${user.name} created a new task: "${task.title}"`,
+							"task_created"
+						);
 					}
 				}
 
@@ -273,6 +287,30 @@ export const taskRoutes = new Elysia({ prefix: "/tasks" })
 							userId: uid,
 						}));
 						await db.insert(taskAssignees).values(assigneeValues);
+
+						// Notify new assignees
+						for (const uid of body.assignees) {
+							await sendRealtimeNotification(
+								uid,
+								"Task Assigned/Updated",
+								`You are assigned to the updated task: "${task.title}"`,
+								"task_assigned"
+							);
+						}
+					}
+				}
+
+				// Notify Admins
+				const [project] = await db.select({ orgId: projects.organizationId }).from(projects).where(eq(projects.id, task.projectId)).limit(1);
+				if (project) {
+					const admins = await getOrgAdmins(project.orgId);
+					for (const adminId of admins) {
+						await sendRealtimeNotification(
+							adminId,
+							"Task Updated",
+							`User ${user.name} updated task: "${task.title}"`,
+							"task_updated"
+						);
 					}
 				}
 
@@ -284,14 +322,12 @@ export const taskRoutes = new Elysia({ prefix: "/tasks" })
 						.where(eq(taskAssignees.taskId, taskId));
 
 					for (const assignee of activeAssignees) {
-						if (assignee.userId !== user.id) {
-							await sendRealtimeNotification(
-								assignee.userId,
-								"Task Status Updated",
-								`"${task.title}" status changed to ${body.status} by ${user.name}`,
-								"status_changed"
-							);
-						}
+						await sendRealtimeNotification(
+							assignee.userId,
+							"Task Status Updated",
+							`"${task.title}" status changed to ${body.status} by ${user.name}`,
+							"status_changed"
+						);
 					}
 				}
 
@@ -320,7 +356,37 @@ export const taskRoutes = new Elysia({ prefix: "/tasks" })
 		const taskId = parseInt(params.id);
 
 		try {
-			await checkTaskAccess(user.id, taskId, "delete");
+			const { task } = await checkTaskAccess(user.id, taskId, "delete");
+
+			// Fetch assignees before deletion
+			const activeAssignees = await db
+				.select({ userId: taskAssignees.userId })
+				.from(taskAssignees)
+				.where(eq(taskAssignees.taskId, taskId));
+
+			// Notify assignees
+			for (const assignee of activeAssignees) {
+				await sendRealtimeNotification(
+					assignee.userId,
+					"Task Deleted",
+					`The task "${task.title}" you were assigned to has been deleted by ${user.name}`,
+					"task_deleted"
+				);
+			}
+
+			// Notify Admins
+			const [project] = await db.select({ orgId: projects.organizationId }).from(projects).where(eq(projects.id, task.projectId)).limit(1);
+			if (project) {
+				const admins = await getOrgAdmins(project.orgId);
+				for (const adminId of admins) {
+					await sendRealtimeNotification(
+						adminId,
+						"Task Deleted",
+						`User ${user.name} deleted task: "${task.title}"`,
+						"task_deleted"
+					);
+				}
+			}
 
 			await db.delete(tasks).where(eq(tasks.id, taskId));
 

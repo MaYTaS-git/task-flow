@@ -106,10 +106,10 @@ export function MemberInviteForm({
 
 	if (credentials) {
 		return (
-			<DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+			<DialogContent className="max-w-md rounded-lg p-0 overflow-hidden max-h-[90vh] flex flex-col">
 				<DialogHeader className="p-6 pb-2">
 					<div className="flex items-center gap-3 mb-2">
-						<div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+						<div className="size-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
 							<ShieldCheck className="size-5 text-primary" />
 						</div>
 						<DialogTitle className="text-xl font-bold">
@@ -128,7 +128,7 @@ export function MemberInviteForm({
 							<Label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1">
 								Email Address
 							</Label>
-							<InputGroup className="h-11 rounded-2xl">
+							<InputGroup className="h-11 rounded-lg">
 								<InputGroupInput
 									value={credentials.email}
 									readOnly
@@ -159,7 +159,7 @@ export function MemberInviteForm({
 							<Label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1">
 								Password
 							</Label>
-							<InputGroup className="h-11 rounded-2xl">
+							<InputGroup className="h-11 rounded-lg">
 								<InputGroupInput
 									value={credentials.password}
 									readOnly
@@ -194,7 +194,7 @@ export function MemberInviteForm({
 						onClick={() => {
 							if (onSuccess) onSuccess();
 						}}
-						className="w-full rounded-2xl h-11 font-bold"
+						className="w-full rounded-lg h-11 font-bold"
 					>
 						Done
 					</Button>
@@ -204,7 +204,7 @@ export function MemberInviteForm({
 	}
 
 	return (
-		<DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+		<DialogContent className="max-w-md rounded-lg p-0 overflow-hidden max-h-[90vh] flex flex-col">
 			<DialogHeader className="p-6 pb-2">
 				<DialogTitle className="text-lg font-bold">
 					{isEditing ? "Edit Member" : "Invite Member"}
@@ -234,7 +234,7 @@ export function MemberInviteForm({
 								id="mem-email"
 								type="email"
 								placeholder="e.g. member@company.com"
-								className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+								className="w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
 								autoFocus
 								disabled={isEditing}
 								{...register("email", {
@@ -263,7 +263,7 @@ export function MemberInviteForm({
 								id="mem-name"
 								type="text"
 								placeholder="e.g. John Doe"
-								className="w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
+								className="w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-11 px-4"
 								{...register("name", {
 									required: "Full name is required",
 								})}
@@ -287,14 +287,14 @@ export function MemberInviteForm({
 									id="mem-pass"
 									type="password"
 									placeholder="Leave blank for random generation"
-									className="w-full text-sm rounded-2xl bg-muted/20 border-border h-11 px-4"
+									className="w-full text-sm rounded-lg bg-muted/20 border-border h-11 px-4"
 									{...register("password")}
 								/>
 							</div>
 						)}
 
 						{inviteMemberMutation.isError && (
-							<p className="text-[10px] font-bold text-destructive bg-destructive/10 border border-destructive/20 rounded-2xl px-4 py-3 uppercase tracking-wide">
+							<p className="text-[10px] font-bold text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 uppercase tracking-wide">
 								{inviteMemberMutation.error instanceof Error
 									? inviteMemberMutation.error.message
 									: "Failed to invite member. Please try again."}

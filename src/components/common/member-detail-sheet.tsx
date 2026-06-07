@@ -3,14 +3,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { 
-	User, 
 	Mail, 
-	Shield, 
 	FolderGit2, 
 	CheckSquare, 
 	ExternalLink,
-	Calendar,
-	Clock
+	Calendar
 } from "lucide-react";
 
 import {
@@ -24,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MemberAvatar } from "@/components/common/member-chip";
-import { useProjects } from "@/hooks/use-projects";
+import { useUserProjects } from "@/hooks/use-projects";
 import { useTasks } from "@/hooks/use-tasks";
 import { TaskStatusBadge, TaskPriorityBadge } from "@/components/common/status-badge";
 import { Separator } from "@/components/ui/separator";
@@ -35,7 +32,24 @@ interface MemberDetailSheetProps {
 	email: string;
 	image?: string | null;
 	role: string;
-	permissions: any;
+	permissions?: {
+		projects?: {
+			view?: boolean;
+			create?: boolean;
+			edit?: boolean;
+			delete?: boolean;
+		};
+		tasks?: {
+			view?: boolean;
+			create?: boolean;
+			edit?: boolean;
+			delete?: boolean;
+		};
+		members?: {
+			view?: boolean;
+			manage?: boolean;
+		};
+	};
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
@@ -66,8 +80,7 @@ export function MemberDetailSheet({
 	open,
 	onOpenChange,
 }: MemberDetailSheetProps) {
-	const { userProjectsQuery } = useProjects();
-	const { data: projects = [], isLoading: isLoadingProjects } = userProjectsQuery(memberId);
+	const { data: projects = [], isLoading: isLoadingProjects } = useUserProjects(memberId);
 	
 	const [activeTab, setActiveTab] = useState("tasks");
 	const [taskStatusFilter, setTaskStatusFilter] = useState("all");
@@ -116,12 +129,12 @@ export function MemberDetailSheet({
 
 				<Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
 					<div className="px-8 pt-4 bg-muted/10 shrink-0">
-						<TabsList className="bg-muted/50 p-1 rounded-2xl h-11 w-full max-w-sm">
-							<TabsTrigger value="tasks" className="flex-1 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs font-bold gap-2">
+						<TabsList className="bg-muted/50 p-1 rounded-lg h-11 w-full max-w-sm">
+							<TabsTrigger value="tasks" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs font-bold gap-2">
 								<CheckSquare className="size-3.5" />
 								Tasks
 							</TabsTrigger>
-							<TabsTrigger value="projects" className="flex-1 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs font-bold gap-2">
+							<TabsTrigger value="projects" className="flex-1 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs font-bold gap-2">
 								<FolderGit2 className="size-3.5" />
 								Projects
 							</TabsTrigger>
@@ -151,12 +164,12 @@ export function MemberDetailSheet({
 									{isLoadingTasks ? (
 										<div className="py-20 text-center text-xs text-muted-foreground font-light">Loading tasks...</div>
 									) : tasks.length === 0 ? (
-										<div className="py-20 text-center text-xs text-muted-foreground font-light border-2 border-dashed border-border rounded-3xl">
+										<div className="py-20 text-center text-xs text-muted-foreground font-light border-2 border-dashed border-border rounded-lg">
 											No tasks found for this member.
 										</div>
 									) : (
 										tasks.map((task) => (
-											<div key={task.id} className="p-4 bg-card border border-border rounded-2xl space-y-2 hover:shadow-md transition-shadow group relative">
+											<div key={task.id} className="p-4 bg-card border border-border rounded-lg space-y-2 hover:shadow-md transition-shadow group relative">
 												<div className="flex items-center justify-between gap-2">
 													<div className="flex items-center gap-2">
 														<span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{task.projectName}</span>
@@ -179,7 +192,7 @@ export function MemberDetailSheet({
 									{isLoadingProjects ? (
 										<div className="py-20 text-center text-xs text-muted-foreground font-light">Loading projects...</div>
 									) : projects.length === 0 ? (
-										<div className="py-20 text-center text-xs text-muted-foreground font-light border-2 border-dashed border-border rounded-3xl">
+										<div className="py-20 text-center text-xs text-muted-foreground font-light border-2 border-dashed border-border rounded-lg">
 											This member is not assigned to any projects.
 										</div>
 									) : (
@@ -187,10 +200,10 @@ export function MemberDetailSheet({
 											<Link 
 												key={project.id} 
 												href={`/portal/projects/view?id=${project.id}`}
-												className="block p-5 bg-card border border-border rounded-3xl space-y-4 hover:shadow-md transition-all group border-transparent hover:border-primary/20 bg-muted/10 hover:bg-card"
+												className="block p-5 bg-card border border-border rounded-lg space-y-4 hover:shadow-md transition-all group border-transparent hover:border-primary/20 bg-muted/10 hover:bg-card"
 											>
 												<div className="flex items-center justify-between">
-													<div className="p-3 bg-background border border-border rounded-2xl text-muted-foreground group-hover:text-primary group-hover:border-primary/30 transition-all">
+													<div className="p-3 bg-background border border-border rounded-md text-muted-foreground group-hover:text-primary group-hover:border-primary/30 transition-all">
 														<FolderGit2 className="size-5" />
 													</div>
 													<ExternalLink className="size-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />

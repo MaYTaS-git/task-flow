@@ -68,7 +68,7 @@ export function ProjectMemberAssignForm({
 	};
 
 	return (
-		<DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+		<DialogContent className="max-w-md rounded-lg p-0 overflow-hidden max-h-[90vh] flex flex-col">
 			<DialogHeader className="p-6 pb-2">
 				<DialogTitle className="text-lg font-bold">
 					Assign Team Member
@@ -110,7 +110,7 @@ export function ProjectMemberAssignForm({
 											field.onChange(val || "")
 										}
 									>
-										<SelectTrigger className="w-full h-11 rounded-2xl bg-muted/20 border-border px-4">
+										<SelectTrigger className="w-full h-11 rounded-lg bg-muted/20 border-border px-4">
 											<SelectValue placeholder="Select a member..." />
 										</SelectTrigger>
 										<SelectContent>

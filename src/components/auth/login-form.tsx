@@ -232,7 +232,7 @@ export default function LoginForm() {
 					<div className="relative z-10 max-w-lg flex flex-col justify-between h-full">
 						{/* Logo */}
 						<div className="flex items-center gap-2 group cursor-default">
-							<div className="p-2 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-inner group-hover:scale-105 transition-transform duration-300 flex items-center justify-center">
+							<div className="p-2 bg-white/10 rounded-md backdrop-blur-md border border-white/20 shadow-inner group-hover:scale-105 transition-transform duration-300 flex items-center justify-center">
 								<Image
 									height={50}
 									width={50}
@@ -270,7 +270,7 @@ export default function LoginForm() {
 						</AnimatePresence>
 
 						{/* Testimonial Quote */}
-						<div className="p-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
+						<div className="p-6 bg-white/5 rounded-lg border border-white/10 backdrop-blur-md">
 							<p className="text-sm text-neutral-300 italic">
 								&ldquo;
 								{mode === "login"
@@ -316,7 +316,7 @@ export default function LoginForm() {
 							<div className="w-full max-w-md space-y-6 relative z-10 py-8">
 						{/* Mobile Brand Logo */}
 						<div className="flex md:hidden items-center justify-center gap-2 mb-2">
-							<div className="p-2 bg-primary/10 rounded-xl border border-primary/20 flex items-center justify-center">
+							<div className="p-2 bg-primary/10 rounded-md border border-primary/20 flex items-center justify-center">
 								<Image
 									height={50}
 									width={50}
@@ -541,7 +541,7 @@ export default function LoginForm() {
 							<div className="w-full max-w-md space-y-5 relative z-10 py-8">
 						{/* Mobile Brand Logo */}
 						<div className="flex md:hidden items-center justify-center gap-2 mb-2">
-							<div className="p-2 bg-primary/10 rounded-xl border border-primary/20 flex items-center justify-center">
+							<div className="p-2 bg-primary/10 rounded-md border border-primary/20 flex items-center justify-center">
 								<Image
 									height={50}
 									width={50}

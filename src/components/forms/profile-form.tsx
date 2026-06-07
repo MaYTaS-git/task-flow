@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { User, Image as ImageIcon } from "lucide-react";
+import { User, Image as ImageIcon, Lock } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,8 @@ interface ProfileFormProps {
 interface ProfileInput {
 	name: string;
 	image: string;
+	password?: string;
+	confirmPassword?: string;
 }
 
 export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFormProps) {
@@ -29,14 +31,20 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 		register,
 		handleSubmit,
 		setValue,
+		watch,
 		formState: { errors, isDirty, isValid },
 	} = useForm<ProfileInput>({
 		defaultValues: {
 			name: initialName,
 			image: initialImage || "",
+			password: "",
+			confirmPassword: "",
 		},
 		mode: "onChange",
 	});
+
+	// eslint-disable-next-line react-hooks/incompatible-library
+	const password = watch("password");
 
 	// Keep defaultValues synced if initial props change
 	useEffect(() => {
@@ -45,7 +53,7 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 	}, [initialName, initialImage, setValue]);
 
 	const updateProfileMutation = useMutation({
-		mutationFn: async (data: { name: string; image?: string }) => {
+		mutationFn: async (data: { name: string; image?: string; password?: string }) => {
 			const res = await api.users.profile.put(data);
 			if (res.error) {
 				throw new Error((res.error.value as { error?: string })?.error || "Failed to update profile");
@@ -55,6 +63,8 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 		onSuccess: async (data, variables) => {
 			await update({ name: variables.name, image: variables.image || null });
 			toast.success("Profile updated successfully!");
+			setValue("password", "");
+			setValue("confirmPassword", "");
 			if (onSuccess) onSuccess();
 		},
 		onError: (err) => {
@@ -64,9 +74,14 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 
 	const onSubmit = (data: ProfileInput) => {
 		if (!data.name.trim()) return;
+		if (data.password && data.password !== data.confirmPassword) {
+			toast.error("Passwords do not match");
+			return;
+		}
 		updateProfileMutation.mutate({
 			name: data.name,
 			image: data.image || undefined,
+			password: data.password || undefined,
 		});
 	};
 
@@ -86,7 +101,7 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 							id="profile-name"
 							type="text"
 							placeholder="Your Name"
-							className="pl-11 w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-12"
+							className="pl-11 w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-12"
 							{...register("name", {
 								required: "Name is required",
 							})}
@@ -112,10 +127,69 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 							id="profile-image"
 							type="url"
 							placeholder="https://example.com/avatar.png"
-							className="pl-11 w-full text-sm rounded-2xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-12"
+							className="pl-11 w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-12"
 							{...register("image")}
 						/>
 					</div>
+				</div>
+
+				<div className="space-y-2">
+					<Label
+						htmlFor="profile-password"
+						className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+					>
+						New Password (Optional)
+					</Label>
+					<div className="relative group">
+						<Lock className="absolute left-4 top-3.5 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+						<Input
+							id="profile-password"
+							type="password"
+							placeholder="Enter new password"
+							className="pl-11 w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-12"
+							{...register("password", {
+								minLength: { value: 6, message: "Password must be at least 6 characters" },
+							})}
+						/>
+					</div>
+					{errors.password && (
+						<p className="text-[10px] font-bold text-destructive uppercase tracking-wide ml-1">
+							{errors.password.message}
+						</p>
+					)}
+				</div>
+
+				<div className="space-y-2">
+					<Label
+						htmlFor="profile-confirm-password"
+						className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground ml-1"
+					>
+						Confirm Password
+					</Label>
+					<div className="relative group">
+						<Lock className="absolute left-4 top-3.5 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+						<Input
+							id="profile-confirm-password"
+							type="password"
+							placeholder="Confirm new password"
+							className="pl-11 w-full text-sm rounded-lg bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all h-12"
+							{...register("confirmPassword", {
+								validate: (val) => {
+									if (password && !val) {
+										return "Please confirm your password";
+									}
+									if (password && val !== password) {
+										return "Passwords do not match";
+									}
+								},
+							})}
+						/>
+					</div>
+					{errors.confirmPassword && (
+						<p className="text-[10px] font-bold text-destructive uppercase tracking-wide ml-1">
+							{errors.confirmPassword.message}
+						</p>
+					)}
 				</div>
 			</div>
 
@@ -123,7 +197,7 @@ export function ProfileForm({ initialName, initialImage, onSuccess }: ProfileFor
 				<Button
 					type="submit"
 					size="lg"
-					className="rounded-2xl px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+					className="rounded-lg px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
 					disabled={
 						updateProfileMutation.isPending || !isDirty || !isValid
 					}

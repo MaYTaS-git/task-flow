@@ -4,6 +4,8 @@
 
 ## Follow DRY principle strictly
 
+## agent skills are placed in the /.agent folder, use them on every step.
+
 ## Never use Any type anywhere strictly
 
 ## Give priority to shadcn components over native and custom ones, always look in the src/components/ui dir for all available components.

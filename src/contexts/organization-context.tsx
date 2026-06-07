@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { useSession } from "next-auth/react";
@@ -9,6 +9,25 @@ interface Organization {
 	id: number;
 	name: string;
 	role: string;
+	permissions?: string;
+	parsedPermissions?: {
+		projects?: {
+			view?: boolean;
+			create?: boolean;
+			edit?: boolean;
+			delete?: boolean;
+		};
+		tasks?: {
+			view?: boolean;
+			create?: boolean;
+			edit?: boolean;
+			delete?: boolean;
+		};
+		members?: {
+			view?: boolean;
+			manage?: boolean;
+		};
+	};
 }
 
 interface OrganizationContextType {
@@ -19,6 +38,7 @@ interface OrganizationContextType {
 	isLoading: boolean;
 	createOrg: (name: string) => Promise<{ id: number; name: string }>;
 	isCreating: boolean;
+	refreshOrganizations: () => void;
 }
 
 const OrganizationContext = createContext<OrganizationContextType | null>(null);
@@ -34,7 +54,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 		return null;
 	});
 
-	const { data: organizations = [], isLoading } = useQuery({
+	const { data: organizations = [], isLoading, refetch } = useQuery({
 		queryKey: ["organizations"],
 		queryFn: async () => {
 			if (!session) return [];
@@ -43,7 +63,21 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 				console.error("Failed to fetch organizations:", res.error);
 				return [];
 			}
-			return res.data as unknown as Organization[];
+			const orgs = res.data as unknown as Organization[];
+			return orgs.map((org) => {
+				let parsedPermissions = undefined;
+				if (org.permissions) {
+					try {
+						parsedPermissions = JSON.parse(org.permissions);
+					} catch (e) {
+						console.error("Failed to parse permissions", e);
+					}
+				}
+				return {
+					...org,
+					parsedPermissions,
+				};
+			});
 		},
 		enabled: !!session,
 	});
@@ -67,7 +101,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 		}
 	}, [organizations, activeOrgId]);
 
-	const setActiveOrgId = (id: number | null) => {
+	const setActiveOrgId = useCallback((id: number | null) => {
 		setActiveOrgIdState(id);
 		if (id !== null) {
 			localStorage.setItem("activeOrgId", id.toString());
@@ -80,7 +114,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 		queryClient.invalidateQueries({ queryKey: ["org-members"] });
 		queryClient.invalidateQueries({ queryKey: ["org-details"] });
 		queryClient.invalidateQueries({ queryKey: ["analytics"] });
-	};
+	}, [queryClient]);
 
 	const createMutation = useMutation({
 		mutationFn: async (name: string) => {
@@ -105,18 +139,31 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
 	const activeOrg = organizations.find(o => o.id === activeOrgId) || null;
 
+	const refreshOrganizations = useCallback(() => {
+		refetch();
+	}, [refetch]);
+
+	const contextValue = useMemo(() => ({
+		organizations,
+		activeOrg,
+		activeOrgId,
+		setActiveOrgId,
+		isLoading,
+		createOrg: async (name: string) => createMutation.mutateAsync(name),
+		isCreating: createMutation.isPending,
+		refreshOrganizations,
+	}), [
+		organizations,
+		activeOrg,
+		activeOrgId,
+		setActiveOrgId,
+		isLoading,
+		createMutation,
+		refreshOrganizations,
+	]);
+
 	return (
-		<OrganizationContext.Provider
-			value={{
-				organizations,
-				activeOrg,
-				activeOrgId,
-				setActiveOrgId,
-				isLoading,
-				createOrg: async (name) => createMutation.mutateAsync(name),
-				isCreating: createMutation.isPending,
-			}}
-		>
+		<OrganizationContext.Provider value={contextValue}>
 			{children}
 		</OrganizationContext.Provider>
 	);

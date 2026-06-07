@@ -1,7 +1,8 @@
 import { Elysia, t } from "elysia";
 import { eq, and, sql } from "drizzle-orm";
-import { db, projects, projectMembers, organizationMembers, users, tasks } from "@/lib/db";
-import { getAuthenticatedUser, checkOrgAccess, checkProjectAccess } from "../auth-helper";
+import { db, projects, projectMembers, organizationMembers, users, tasks, taskAssignees } from "@/lib/db";
+import { getAuthenticatedUser, checkOrgAccess, checkProjectAccess, getOrgAdmins } from "../auth-helper";
+import { sendRealtimeNotification } from "@/lib/ws";
 
 export const projectRoutes = new Elysia({ prefix: "/projects" })
 	// Get all projects for an organization
@@ -320,6 +321,30 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 					userId: targetUserId,
 				});
 
+				// Notify the member
+				const [project] = await db.select({ name: projects.name, orgId: projects.organizationId }).from(projects).where(eq(projects.id, projectId)).limit(1);
+				if (project) {
+					await sendRealtimeNotification(
+						targetUserId,
+						"Project Assigned",
+						`You have been assigned to the project: "${project.name}"`,
+						"project_assigned"
+					);
+
+					// Notify Admins
+					const admins = await getOrgAdmins(project.orgId);
+					for (const adminId of admins) {
+						if (adminId !== user.id && adminId !== targetUserId) {
+							await sendRealtimeNotification(
+								adminId,
+								"Project Team Updated",
+								`User ${user.name} assigned a new member to project: "${project.name}"`,
+								"team_updated"
+							);
+						}
+					}
+				}
+
 				return { success: true, message: "Member assigned to project successfully" };
 			} catch (err) {
 				set.status = (err as Error).message.includes("Forbidden") ? 403 : 400;
@@ -376,6 +401,30 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 						eq(projectMembers.userId, targetUserId)
 					)
 				);
+
+			// Notify the member
+			const [project] = await db.select({ name: projects.name, orgId: projects.organizationId }).from(projects).where(eq(projects.id, projectId)).limit(1);
+			if (project) {
+				await sendRealtimeNotification(
+					targetUserId,
+					"Project Unassigned",
+					`You have been removed from the project: "${project.name}"`,
+					"project_unassigned"
+				);
+
+				// Notify Admins
+				const admins = await getOrgAdmins(project.orgId);
+				for (const adminId of admins) {
+					if (adminId !== user.id && adminId !== targetUserId) {
+						await sendRealtimeNotification(
+							adminId,
+							"Project Team Updated",
+							`User ${user.name} removed a member from project: "${project.name}"`,
+							"team_updated"
+						);
+					}
+				}
+			}
 
 			return { success: true, message: "Member removed from project successfully" };
 		} catch (err) {

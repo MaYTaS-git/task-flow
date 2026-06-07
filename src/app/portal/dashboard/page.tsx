@@ -10,16 +10,13 @@ import {
 	Clock,
 	Square,
 } from "lucide-react";
-import Link from "next/link";
-
 import { useProjects } from "@/hooks/use-projects";
 import { useOrg } from "@/hooks/use-org";
 import { useTasks } from "@/hooks/use-tasks";
 import { useSetHeader } from "@/contexts/header-context";
+import { useOrganization } from "@/contexts/organization-context";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Form imports
 import { ProjectCreateForm } from "@/components/forms/project-create-form";
@@ -66,6 +63,8 @@ export default function Dashboard() {
 	const { orgDetailsQuery } = useOrg();
 	const { tasksQuery, activeTimerQuery, stopTimerMutation } = useTasks();
 
+	const { activeOrg } = useOrganization();
+
 	const projects = (projectsQuery.data || []) as ProjectData[];
 	const isProjectsLoading = projectsQuery.isLoading;
 	const orgDetails = orgDetailsQuery.data;
@@ -75,6 +74,8 @@ export default function Dashboard() {
 	const activeTimer = activeTimerQuery.data;
 
 	const isUserAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+	const canCreateTasks = isUserAdmin || activeOrg?.parsedPermissions?.tasks?.create;
+	const canCreateProjects = isUserAdmin || activeOrg?.parsedPermissions?.projects?.create;
 
 	// Modals state
 	const [showNewProjectModal, setShowNewProjectModal] = useState(false);
@@ -117,7 +118,7 @@ export default function Dashboard() {
 			actions: (
 				<div className="flex items-center gap-2">
 					{activeTimer && (
-						<div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-xl text-primary font-mono text-xs animate-fade-in">
+						<div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-md text-primary font-mono text-xs animate-fade-in">
 							<Clock className="size-3.5 animate-pulse" />
 							<span>{formatDuration(timerSeconds)}</span>
 							<span className="text-muted-foreground truncate max-w-[120px] ml-1">
@@ -138,7 +139,6 @@ export default function Dashboard() {
 					)}
 					{isUserAdmin && (
 						<Button
-							variant="outline"
 							onClick={() => setShowNewMemberModal(true)}
 							size="sm"
 							className="hidden sm:flex"
@@ -147,10 +147,12 @@ export default function Dashboard() {
 							Invite
 						</Button>
 					)}
-					<Button onClick={() => setShowNewTaskModal(true)} size="sm">
-						<Plus className="size-3.5 mr-1" />
-						New Task
-					</Button>
+					{canCreateTasks && (
+						<Button onClick={() => setShowNewTaskModal(true)} size="sm">
+							<Plus className="size-3.5 mr-1" />
+							New Task
+						</Button>
+					)}
 				</div>
 			),
 		});
@@ -161,6 +163,7 @@ export default function Dashboard() {
 		timerSeconds,
 		stopTimerMutation,
 		isUserAdmin,
+		canCreateTasks,
 	]);
 
 	// Statistics Calculations
@@ -192,7 +195,7 @@ export default function Dashboard() {
 		<div className="p-6 sm:p-8 space-y-8 max-w-7xl mx-auto pb-12">
 			{/* Active Timer Banner for Mobile */}
 			{activeTimer && (
-				<div className="md:hidden p-4 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-between font-mono text-xs text-primary animate-fade-in">
+				<div className="md:hidden p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between font-mono text-xs text-primary animate-fade-in">
 					<div className="flex items-center gap-2">
 						<Clock className="size-4 animate-pulse" />
 						<span>{formatDuration(timerSeconds)}</span>
@@ -216,7 +219,7 @@ export default function Dashboard() {
 
 			{/* Performance Summary Cards */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 stagger-children">
-				<div className="p-6 bg-card border border-border rounded-3xl space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+				<div className="p-6 bg-card border border-border rounded-lg space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
 					<div className="flex justify-between items-center text-muted-foreground">
 						<span className="text-[10px] uppercase font-bold tracking-[0.15em] group-hover:text-primary transition-colors">
 							Performance
@@ -236,7 +239,7 @@ export default function Dashboard() {
 					</div>
 				</div>
 
-				<div className="p-6 bg-card border border-border rounded-3xl space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+				<div className="p-6 bg-card border border-border rounded-lg space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
 					<div className="flex justify-between items-center text-muted-foreground">
 						<span className="text-[10px] uppercase font-bold tracking-[0.15em] group-hover:text-primary transition-colors">
 							Workspaces
@@ -254,7 +257,7 @@ export default function Dashboard() {
 					<div className="w-full h-2 bg-muted/50 rounded-full" />
 				</div>
 
-				<div className="p-6 bg-card border border-border rounded-3xl space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+				<div className="p-6 bg-card border border-border rounded-lg space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
 					<div className="flex justify-between items-center text-muted-foreground">
 						<span className="text-[10px] uppercase font-bold tracking-[0.15em] group-hover:text-primary transition-colors">
 							Team Size
@@ -272,7 +275,7 @@ export default function Dashboard() {
 					<div className="w-full h-2 bg-muted/50 rounded-full" />
 				</div>
 
-				<div className="p-6 bg-card border border-border rounded-3xl space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+				<div className="p-6 bg-card border border-border rounded-lg space-y-4 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
 					<div className="flex justify-between items-center text-muted-foreground">
 						<span className="text-[10px] uppercase font-bold tracking-[0.15em] group-hover:text-primary transition-colors">
 							Total Items
@@ -292,20 +295,22 @@ export default function Dashboard() {
 			</div>
 
 			{/* Project Overview List */}
-			<div className="p-6 bg-card border border-border rounded-3xl space-y-4 animate-fade-in-up flex flex-col h-[600px]">
+			<div className="p-6 bg-card border border-border rounded-lg space-y-4 animate-fade-in-up flex flex-col h-[600px]">
 				<div className="flex justify-between items-center shrink-0">
 					<h2 className="text-sm font-bold uppercase tracking-wider">
 						Projects Progress Overview
 					</h2>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => setShowNewProjectModal(true)}
-					>
-						<Plus className="size-3.5 mr-1" /> Create Project
-					</Button>
+					{canCreateProjects && (
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setShowNewProjectModal(true)}
+						>
+							<Plus className="size-3.5 mr-1" /> Create Project
+						</Button>
+					)}
 				</div>
-				<div className="border border-border rounded-2xl overflow-hidden">
+				<div className="border border-border rounded-lg overflow-hidden">
 					<Table>
 						<TableHeader className="bg-muted/30">
 							<TableRow className="hover:bg-transparent">
@@ -336,7 +341,7 @@ export default function Dashboard() {
 										onClick={() => router.push(`/portal/projects/view?id=${proj.id}`)}
 									>
 										<TableCell>
-											<div className="p-2 bg-muted group-hover:bg-primary/10 rounded-xl border border-border text-muted-foreground group-hover:text-primary transition-colors">
+											<div className="p-2 bg-muted group-hover:bg-primary/10 rounded-md border border-border text-muted-foreground group-hover:text-primary transition-colors">
 												<FolderGit2 className="size-4" />
 											</div>
 										</TableCell>

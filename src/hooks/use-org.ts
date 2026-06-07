@@ -69,17 +69,19 @@ export function useOrg() {
 	});
 
 	const updatePermissionsMutation = useMutation({
-		mutationFn: async (data: { userId: number; permissions: Record<string, unknown> }) => {
+		mutationFn: async (data: { userId: number; name?: string; password?: string; permissions?: Record<string, unknown> }) => {
 			if (!activeOrgId) throw new Error("No active organization selected");
 			const res = await api.org({ id: activeOrgId }).members({ userId: data.userId }).put({
+				name: data.name,
+				password: data.password,
 				permissions: data.permissions,
 			});
-			if (res.error) throw new Error((res.error.value as unknown as { error?: string })?.error || "Failed to update permissions");
+			if (res.error) throw new Error((res.error.value as unknown as { error?: string })?.error || "Failed to update member");
 			return res.data;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["org-details", activeOrgId] });
-			toast.success("Permissions updated successfully!");
+			toast.success("Member updated successfully!");
 		},
 	});
 

@@ -94,9 +94,9 @@ export default function LandingPage() {
 						{/* Feature Card 1 */}
 						<motion.div
 							whileHover={{ y: -5 }}
-							className="p-8 rounded-3xl border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
+							className="p-8 rounded-lg border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
 						>
-							<div className="p-3 bg-muted border border-border rounded-2xl w-fit">
+							<div className="p-3 bg-muted border border-border rounded-md w-fit">
 								<Building2 className="size-6 text-indigo-500 dark:text-indigo-400" />
 							</div>
 							<div className="space-y-2">
@@ -114,9 +114,9 @@ export default function LandingPage() {
 						{/* Feature Card 2 */}
 						<motion.div
 							whileHover={{ y: -5 }}
-							className="p-8 rounded-3xl border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
+							className="p-8 rounded-lg border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
 						>
-							<div className="p-3 bg-muted border border-border rounded-2xl w-fit">
+							<div className="p-3 bg-muted border border-border rounded-md w-fit">
 								<KanbanSquare className="size-6 text-emerald-500 dark:text-emerald-400" />
 							</div>
 							<div className="space-y-2">
@@ -134,9 +134,9 @@ export default function LandingPage() {
 						{/* Feature Card 3 */}
 						<motion.div
 							whileHover={{ y: -5 }}
-							className="p-8 rounded-3xl border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
+							className="p-8 rounded-lg border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
 						>
-							<div className="p-3 bg-muted border border-border rounded-2xl w-fit">
+							<div className="p-3 bg-muted border border-border rounded-md w-fit">
 								<Users2 className="size-6 text-pink-500 dark:text-pink-400" />
 							</div>
 							<div className="space-y-2">
@@ -154,9 +154,9 @@ export default function LandingPage() {
 						{/* Feature Card 4 */}
 						<motion.div
 							whileHover={{ y: -5 }}
-							className="p-8 rounded-3xl border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
+							className="p-8 rounded-lg border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
 						>
-							<div className="p-3 bg-muted border border-border rounded-2xl w-fit">
+							<div className="p-3 bg-muted border border-border rounded-md w-fit">
 								<MessageSquareShare className="size-6 text-amber-500 dark:text-amber-400" />
 							</div>
 							<div className="space-y-2">
@@ -174,9 +174,9 @@ export default function LandingPage() {
 						{/* Feature Card 5 */}
 						<motion.div
 							whileHover={{ y: -5 }}
-							className="p-8 rounded-3xl border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
+							className="p-8 rounded-lg border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
 						>
-							<div className="p-3 bg-muted border border-border rounded-2xl w-fit">
+							<div className="p-3 bg-muted border border-border rounded-md w-fit">
 								<BarChart3 className="size-6 text-purple-500 dark:text-purple-400" />
 							</div>
 							<div className="space-y-2">
@@ -194,9 +194,9 @@ export default function LandingPage() {
 						{/* Feature Card 6 */}
 						<motion.div
 							whileHover={{ y: -5 }}
-							className="p-8 rounded-3xl border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
+							className="p-8 rounded-lg border border-border bg-card/50 backdrop-blur-md flex flex-col justify-between h-72 group transition-all"
 						>
-							<div className="p-3 bg-muted border border-border rounded-2xl w-fit">
+							<div className="p-3 bg-muted border border-border rounded-md w-fit">
 								<CheckCircle2 className="size-6 text-cyan-500 dark:text-cyan-400" />
 							</div>
 							<div className="space-y-2">
@@ -214,9 +214,9 @@ export default function LandingPage() {
 				</section>
 
 				{/* Visual Showcase (Mockup Layout) */}
-				<section className="p-1.5 rounded-3xl border border-border bg-muted relative overflow-hidden group">
+				<section className="p-1.5 rounded-lg border border-border bg-muted relative overflow-hidden group">
 					<div className="absolute inset-0 bg-linear-to-b from-primary/5 dark:from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-					<div className="rounded-2xl border border-border bg-background p-6 sm:p-8 space-y-6">
+					<div className="rounded-lg border border-border bg-background p-6 sm:p-8 space-y-6">
 						{/* Mockup Header */}
 						<div className="flex items-center justify-between border-b border-border pb-4">
 							<div className="flex items-center gap-3">
@@ -237,7 +237,7 @@ export default function LandingPage() {
 						<div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 							{/* Sidebar Mockup */}
 							<div className="space-y-4 md:col-span-1 border-r border-border pr-4 hidden md:block">
-								<div className="p-3 bg-muted border border-border rounded-xl flex items-center justify-between">
+								<div className="p-3 bg-muted border border-border rounded-md flex items-center justify-between">
 									<span className="text-xs font-bold text-foreground">
 										Acme Corp
 									</span>
@@ -257,7 +257,7 @@ export default function LandingPage() {
 							<div className="md:col-span-3 space-y-6">
 								{/* Charts & Status Mockup */}
 								<div className="grid grid-cols-3 gap-4">
-									<div className="p-4 bg-muted border border-border rounded-2xl space-y-2">
+									<div className="p-4 bg-muted border border-border rounded-lg space-y-2">
 										<span className="text-[10px] uppercase text-muted-foreground tracking-wider">
 											Completed
 										</span>
@@ -265,7 +265,7 @@ export default function LandingPage() {
 											84%
 										</span>
 									</div>
-									<div className="p-4 bg-muted border border-border rounded-2xl space-y-2">
+									<div className="p-4 bg-muted border border-border rounded-lg space-y-2">
 										<span className="text-[10px] uppercase text-muted-foreground tracking-wider">
 											Active Tasks
 										</span>
@@ -273,7 +273,7 @@ export default function LandingPage() {
 											12
 										</span>
 									</div>
-									<div className="p-4 bg-muted border border-border rounded-2xl space-y-2">
+									<div className="p-4 bg-muted border border-border rounded-lg space-y-2">
 										<span className="text-[10px] uppercase text-muted-foreground tracking-wider">
 											Team Capacity
 										</span>
@@ -285,7 +285,7 @@ export default function LandingPage() {
 
 								{/* Kanban Board Mockup */}
 								<div className="grid grid-cols-3 gap-4">
-									<div className="p-3 bg-muted border border-border rounded-xl space-y-3">
+									<div className="p-3 bg-muted border border-border rounded-md space-y-3">
 										<div className="flex justify-between items-center border-b border-border pb-1.5">
 											<span className="text-xs font-bold text-foreground/80">
 												To Do
@@ -307,7 +307,7 @@ export default function LandingPage() {
 										</div>
 									</div>
 
-									<div className="p-3 bg-muted border border-border rounded-xl space-y-3">
+									<div className="p-3 bg-muted border border-border rounded-md space-y-3">
 										<div className="flex justify-between items-center border-b border-border pb-1.5">
 											<span className="text-xs font-bold text-foreground/80">
 												In Progress
@@ -326,7 +326,7 @@ export default function LandingPage() {
 										</div>
 									</div>
 
-									<div className="p-3 bg-muted border border-border rounded-xl space-y-3">
+									<div className="p-3 bg-muted border border-border rounded-md space-y-3">
 										<div className="flex justify-between items-center border-b border-border pb-1.5">
 											<span className="text-xs font-bold text-foreground/80">
 												Done
@@ -349,7 +349,7 @@ export default function LandingPage() {
 				</section>
 
 				{/* Bottom Conversion Section */}
-				<section className="p-12 rounded-3xl border border-border bg-radial-[at_50%_0%] from-primary/5 to-transparent text-center space-y-6 max-w-4xl mx-auto">
+				<section className="p-12 rounded-lg border border-border bg-radial-[at_50%_0%] from-primary/5 to-transparent text-center space-y-6 max-w-4xl mx-auto">
 					<h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
 						Ready to unlock team velocity?
 					</h2>
