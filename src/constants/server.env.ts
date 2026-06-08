@@ -3,12 +3,12 @@ import { Value } from "@sinclair/typebox/value";
 
 const envSchema = t.Object({
 	DATABASE_URL: t.String(),
-	GOOGLE_CLIENT_ID: t.String(),
-	GOOGLE_CLIENT_SECRET: t.String(),
-	GITHUB_ID: t.String(),
-	GITHUB_SECRET: t.String(),
-	DISCORD_CLIENT_ID: t.String(),
-	DISCORD_CLIENT_SECRET: t.String(),
+	// GOOGLE_CLIENT_ID: t.String(),
+	// GOOGLE_CLIENT_SECRET: t.String(),
+	// GITHUB_ID: t.String(),
+	// GITHUB_SECRET: t.String(),
+	// DISCORD_CLIENT_ID: t.String(),
+	// DISCORD_CLIENT_SECRET: t.String(),
 });
 
 const cleanEnv = Value.Clean(envSchema, { ...process.env });
