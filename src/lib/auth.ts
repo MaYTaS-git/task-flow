@@ -1,7 +1,7 @@
 import { type NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import GitHubProvider from "next-auth/providers/github";
-import DiscordProvider from "next-auth/providers/discord";
+// import GoogleProvider from "next-auth/providers/google";
+// import GitHubProvider from "next-auth/providers/github";
+// import DiscordProvider from "next-auth/providers/discord";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
@@ -17,18 +17,18 @@ async function verifyPassword(password: string, hashedPassword: string) {
 export const authOptions: NextAuthOptions = {
 	adapter: DrizzleAdapter(db),
 	providers: [
-		GoogleProvider({
-			clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-			clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-		}),
-		GitHubProvider({
-			clientId: process.env.GITHUB_ID ?? "",
-			clientSecret: process.env.GITHUB_SECRET ?? "",
-		}),
-		DiscordProvider({
-			clientId: process.env.DISCORD_CLIENT_ID ?? "",
-			clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
-		}),
+		// GoogleProvider({
+		// 	clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+		// 	clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+		// }),
+		// GitHubProvider({
+		// 	clientId: process.env.GITHUB_ID ?? "",
+		// 	clientSecret: process.env.GITHUB_SECRET ?? "",
+		// }),
+		// DiscordProvider({
+		// 	clientId: process.env.DISCORD_CLIENT_ID ?? "",
+		// 	clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
+		// }),
 		CredentialsProvider({
 			id: "credentials",
 			name: "Email and Password",
