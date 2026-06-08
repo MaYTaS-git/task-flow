@@ -2,11 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import { useSession, signOut } from "next-auth/react";
-import {
-	redirect,
-	usePathname,
-	useSearchParams,
-} from "next/navigation";
+import { redirect, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
@@ -141,8 +137,13 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 	// Initialize real-time notifications
 	const isWsConnected = useNotifications();
 
-	const { organizations, activeOrg, activeOrgId, setActiveOrgId, isLoading: isOrgLoading } =
-		useOrganization();
+	const {
+		organizations,
+		activeOrg,
+		activeOrgId,
+		setActiveOrgId,
+		isLoading: isOrgLoading,
+	} = useOrganization();
 
 	const [showCreateOrgModal, setShowCreateOrgModal] = useState(false);
 	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -177,23 +178,37 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 		refetchInterval: isWsConnected ? false : 30000, // Disable polling if connected, fallback to 30s if offline
 	});
 
-	const unreadNotificationsCount = notificationsData.filter(n => !n.read).length;
+	const unreadNotificationsCount = notificationsData.filter(
+		(n) => !n.read,
+	).length;
 
-	const isUserAdmin = activeOrg?.role === "ADMIN" || activeOrg?.role === "SUPER_ADMIN";
-	const canViewProjects = isUserAdmin || activeOrg?.parsedPermissions?.projects?.view !== false;
-	const canViewTasks = isUserAdmin || activeOrg?.parsedPermissions?.tasks?.view !== false;
-	const canViewMembers = isUserAdmin || activeOrg?.parsedPermissions?.members?.view !== false;
+	const isUserAdmin =
+		activeOrg?.role === "ADMIN" || activeOrg?.role === "SUPER_ADMIN";
+	const canViewProjects =
+		isUserAdmin || activeOrg?.parsedPermissions?.projects?.view !== false;
+	const canViewTasks =
+		isUserAdmin || activeOrg?.parsedPermissions?.tasks?.view !== false;
+	const canViewMembers =
+		isUserAdmin || activeOrg?.parsedPermissions?.members?.view !== false;
 
 	const navItems = [
 		{ name: "Dashboard", href: "/portal/dashboard", icon: LayoutGrid },
-		...(canViewProjects ? [{
-			name: "Projects",
-			href: "/portal/projects",
-			icon: FolderGit2,
-			hasSubmenu: projects.length > 0,
-		}] : []),
-		...(canViewMembers ? [{ name: "Members", href: "/portal/members", icon: Users }] : []),
-		...(canViewTasks ? [{ name: "Tasks", href: "/portal/tasks", icon: CheckSquare }] : []),
+		...(canViewProjects
+			? [
+					{
+						name: "Projects",
+						href: "/portal/projects",
+						icon: FolderGit2,
+						hasSubmenu: projects.length > 0,
+					},
+				]
+			: []),
+		...(canViewMembers
+			? [{ name: "Members", href: "/portal/members", icon: Users }]
+			: []),
+		...(canViewTasks
+			? [{ name: "Tasks", href: "/portal/tasks", icon: CheckSquare }]
+			: []),
 		{ name: "Notifications", href: "/portal/notifications", icon: Bell },
 	];
 
@@ -241,7 +256,10 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 										{activeOrg?.name}
 									</span>
 								</div>
-								<Badge variant="outline" className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground border-border bg-background/50 scale-90 shrink-0">
+								<Badge
+									variant="outline"
+									className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground border-border bg-background/50 scale-90 shrink-0"
+								>
 									Workspace
 								</Badge>
 							</div>
@@ -325,11 +343,16 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 											>
 												<Icon className="size-4 mr-2" />
 												<span>{item.name}</span>
-												{item.name === "Notifications" && unreadNotificationsCount > 0 && (
-													<span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:top-1 group-data-[collapsible=icon]:right-1 group-data-[collapsible=icon]:h-3.5 group-data-[collapsible=icon]:min-w-3.5 group-data-[collapsible=icon]:text-[8px] group-data-[collapsible=icon]:p-0 animate-pulse">
-														{unreadNotificationsCount}
-													</span>
-												)}
+												{item.name ===
+													"Notifications" &&
+													unreadNotificationsCount >
+														0 && (
+														<span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:top-1 group-data-[collapsible=icon]:right-1 group-data-[collapsible=icon]:h-3.5 group-data-[collapsible=icon]:min-w-3.5 group-data-[collapsible=icon]:text-[8px] group-data-[collapsible=icon]:p-0 animate-pulse">
+															{
+																unreadNotificationsCount
+															}
+														</span>
+													)}
 											</SidebarMenuButton>
 
 											{item.hasSubmenu && (
@@ -382,7 +405,11 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 				<SidebarFooter className="p-3 border-t border-border/40 bg-sidebar/20">
 					<div className="flex items-center justify-between gap-2 w-full group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-3 group-data-[collapsible=icon]:p-0">
 						{/* User profile chip */}
-						<Link href="/portal/profile" title="My Profile" className="flex-1 min-w-0 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:flex-none">
+						<Link
+							href="/portal/profile"
+							title="My Profile"
+							className="flex-1 min-w-0 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:flex-none"
+						>
 							<div className="flex items-center gap-2 px-2 py-1.5 bg-muted/30 border border-border/40 rounded-full hover:border-primary/50 hover:bg-muted/50 transition-all duration-200 outline-none group cursor-pointer hover:shadow-sm group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent">
 								<Avatar className="size-7 shrink-0">
 									<AvatarImage
@@ -400,7 +427,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 								</span>
 							</div>
 						</Link>
-						
+
 						{/* Logout button */}
 						<Button
 							variant="outline"
@@ -476,9 +503,11 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 								tasks, members, and notifications.
 							</p>
 						</div>
-						{((user as unknown) as { role?: string })?.role === "MEMBER" ? (
+						{(user as unknown as { role?: string })?.role ===
+						"MEMBER" ? (
 							<p className="text-xs text-muted-foreground font-medium animate-fade-in-up">
-								Please contact your workspace administrator to invite you to an organization.
+								Please contact your workspace administrator to
+								invite you to an organization.
 							</p>
 						) : (
 							<Button
@@ -530,7 +559,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 							be lost.
 						</DialogDescription>
 					</DialogHeader>
-					<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
+					<DialogFooter className="pt-4 border-t-0 flex gap-2 justify-end">
 						<Button
 							variant="ghost"
 							onClick={() => setShowLogoutConfirm(false)}
@@ -580,4 +609,3 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 };
 
 export default Layout;
-
