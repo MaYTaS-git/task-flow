@@ -185,6 +185,21 @@ export const taskRoutes = new Elysia({ prefix: "/tasks" })
 			try {
 				await checkProjectAccess(user.id, projectId, "create");
 
+				if (user.role !== "SUPER_ADMIN") {
+					const existingTasks = await db
+						.select()
+						.from(tasks)
+						.where(eq(tasks.projectId, projectId));
+					if (existingTasks.length >= 50) {
+						set.status = 400;
+						return {
+							success: false,
+							error: "Limit reached: A project can have up to 50 tasks",
+							message: "Limit reached: A project can have up to 50 tasks",
+						};
+					}
+				}
+
 				// Create task record
 				const [task] = await db
 					.insert(tasks)

@@ -29,6 +29,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { MemberDetailSheet } from "@/components/common/member-detail-sheet";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import { useRouter } from "next/navigation";
 import { useOrganization } from "@/contexts/organization-context";
@@ -118,7 +119,8 @@ export default function MembersPage() {
 					Loading members...
 				</div>
 			) : (
-				<div className="border border-border bg-card/65 backdrop-blur-lg rounded-lg overflow-hidden animate-fade-in-up">
+				<ScrollArea className="w-full border border-border bg-card/65 backdrop-blur-lg rounded-lg animate-fade-in-up">
+					<div className="min-w-[550px]">
 						<Table>
 							<TableHeader className="bg-muted/30">
 								<TableRow className="hover:bg-transparent">
@@ -213,7 +215,9 @@ export default function MembersPage() {
 								)}
 							</TableBody>
 						</Table>
-				</div>
+					</div>
+					<ScrollBar orientation="horizontal" />
+				</ScrollArea>
 			)}
 
 			{/* Member Detail Sheet */}
@@ -281,7 +285,7 @@ export default function MembersPage() {
 							workspace? This action cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
-					<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
+					<DialogFooter className="pt-4 flex gap-2 justify-end">
 						<Button
 							variant="ghost"
 							onClick={() => setMemberToRemove(null)}

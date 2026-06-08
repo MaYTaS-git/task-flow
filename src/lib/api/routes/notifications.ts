@@ -1,20 +1,32 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { eq, and, isNull, desc } from "drizzle-orm";
 import { db, notifications } from "@/lib/db";
 import { getAuthenticatedUser } from "../auth-helper";
 
 export const notificationRoutes = new Elysia({ prefix: "/notifications" })
 	// Get all notifications for the authenticated user
-	.get("/", async () => {
+	.get("/", async ({ query }) => {
 		const user = await getAuthenticatedUser();
 
-		const list = await db
+		const dbQuery = db
 			.select()
 			.from(notifications)
 			.where(eq(notifications.userId, user.id))
 			.orderBy(desc(notifications.createdAt));
 
+		if (query.limit) {
+			const limit = parseInt(query.limit);
+			const offset = query.offset ? parseInt(query.offset) : 0;
+			return await dbQuery.limit(limit).offset(offset);
+		}
+
+		const list = await dbQuery;
 		return list;
+	}, {
+		query: t.Object({
+			limit: t.Optional(t.String()),
+			offset: t.Optional(t.String()),
+		})
 	})
 
 	// Mark a notification as read

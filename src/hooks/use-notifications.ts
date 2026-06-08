@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSession } from "@/contexts/session-context";
 import { toast } from "sonner";
@@ -15,18 +14,45 @@ export function useNotifications() {
 	const socketRef = useRef<WebSocket | null>(null);
 	const retryCountRef = useRef(0);
 	const maxRetries = 5;
+	const [isConnected, setIsConnected] = useState(false);
 
 	useEffect(() => {
 		if (!user?.id) return;
 
 		let isMounted = true;
-		let reconnectTimeout: NodeJS.Timeout;
+		let reconnectTimeout: NodeJS.Timeout | null = null;
+		let pollInterval: NodeJS.Timeout | null = null;
+
+		const startPolling = () => {
+			if (pollInterval) return;
+			console.log("[Notifications] WS disconnected. Starting 30s polling fallback...");
+			pollInterval = setInterval(() => {
+				if (!isMounted) return;
+				console.log("[Notifications] Polling notifications and attempting to reconnect WS...");
+				
+				// Poll notifications
+				queryClient.invalidateQueries({ queryKey: ["notifications"] });
+				
+				// Attempt WS reconnect
+				connect();
+			}, 30000);
+		};
+
+		const stopPolling = () => {
+			if (pollInterval) {
+				clearInterval(pollInterval);
+				pollInterval = null;
+			}
+		};
 
 		const connect = () => {
 			if (!isMounted) return;
 
 			// Close existing connection if any
 			if (socketRef.current) {
+				if (socketRef.current.readyState === WebSocket.OPEN || socketRef.current.readyState === WebSocket.CONNECTING) {
+					return;
+				}
 				socketRef.current.close();
 			}
 
@@ -36,9 +62,12 @@ export function useNotifications() {
 
 				socket.onopen = () => {
 					if (!isMounted) return;
+					console.log("[Notifications] WS connected");
+					setIsConnected(true);
 					// Authenticate with the WS server
 					socket.send(JSON.stringify({ type: "auth", userId: user.id.toString() }));
 					retryCountRef.current = 0; // Reset retry count on successful connection
+					stopPolling(); // Connected, stop fallback polling
 				};
 
 				socket.onmessage = (event) => {
@@ -80,26 +109,32 @@ export function useNotifications() {
 				};
 
 				socket.onerror = () => {
-					// Silent failure on console to avoid {} logs, 
-					// error is usually followed by onclose
+					// Silent failure
 				};
 
 				socket.onclose = () => {
 					if (!isMounted) return;
 					socketRef.current = null;
+					setIsConnected(false);
+					startPolling(); // Start fallback polling
 					
 					// Exponential backoff for reconnection
 					if (retryCountRef.current < maxRetries) {
 						const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
 						retryCountRef.current++;
+						if (reconnectTimeout) clearTimeout(reconnectTimeout);
 						reconnectTimeout = setTimeout(connect, delay);
 					}
 				};
 			} catch {
-				// Failed to instantiate WebSocket
+				socketRef.current = null;
+				setIsConnected(false);
+				startPolling(); // Start fallback polling
+				
 				if (retryCountRef.current < maxRetries) {
 					const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
 					retryCountRef.current++;
+					if (reconnectTimeout) clearTimeout(reconnectTimeout);
 					reconnectTimeout = setTimeout(connect, delay);
 				}
 			}
@@ -109,6 +144,7 @@ export function useNotifications() {
 
 		return () => {
 			isMounted = false;
+			stopPolling();
 			if (reconnectTimeout) clearTimeout(reconnectTimeout);
 			if (socketRef.current) {
 				socketRef.current.close();
@@ -117,5 +153,5 @@ export function useNotifications() {
 		};
 	}, [user?.id, queryClient, refreshOrganizations, updateSession]);
 
-	return null;
+	return isConnected;
 }

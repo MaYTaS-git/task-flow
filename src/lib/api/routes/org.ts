@@ -71,6 +71,21 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 				return { success: false, error: "Forbidden: Only admins can create organizations" };
 			}
 
+			if (user.role !== "SUPER_ADMIN") {
+				const userOrgs = await db
+					.select()
+					.from(organizations)
+					.where(eq(organizations.createdById, user.id));
+				if (userOrgs.length >= 3) {
+					set.status = 400;
+					return {
+						success: false,
+						error: "Limit reached: You can create a maximum of 3 organizations",
+						message: "Limit reached: You can create a maximum of 3 organizations",
+					};
+				}
+			}
+
 			// Create organization
 			const [org] = await db
 				.insert(organizations)
@@ -201,6 +216,21 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 			try {
 				await checkOrgAccess(user.id, orgId, "ADMIN");
 
+				if (user.role !== "SUPER_ADMIN") {
+					const existingMembers = await db
+						.select()
+						.from(organizationMembers)
+						.where(eq(organizationMembers.organizationId, orgId));
+					if (existingMembers.length >= 5) {
+						set.status = 400;
+						return {
+							success: false,
+							error: "Limit reached: An organization can have up to 5 members",
+							message: "Limit reached: An organization can have up to 5 members",
+						};
+					}
+				}
+
 				// Check if user already exists
 				let [existingUser] = await db
 					.select()
@@ -266,7 +296,7 @@ export const orgRoutes = new Elysia({ prefix: "/org" })
 					permissions: JSON.stringify(defaultPermissions),
 				});
 
-				return { success: true, message: "Member added successfully" };
+				return { success: true, message: "Member added successfully", userId: existingUser.id };
 			} catch (err) {
 				set.status = (err as Error).message.includes("Forbidden") ? 403 : 400;
 				return { success: false, error: (err as Error).message };

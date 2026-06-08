@@ -139,7 +139,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 	const { headerData } = useHeader();
 
 	// Initialize real-time notifications
-	useNotifications();
+	const isWsConnected = useNotifications();
 
 	const { organizations, activeOrg, activeOrgId, setActiveOrgId, isLoading: isOrgLoading } =
 		useOrganization();
@@ -174,7 +174,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 			if (res.error || !res.data) return [];
 			return res.data as { id: number; read: string | null }[];
 		},
-		refetchInterval: 10000, // Poll every 10 seconds for notifications
+		refetchInterval: isWsConnected ? false : 30000, // Disable polling if connected, fallback to 30s if offline
 	});
 
 	const unreadNotificationsCount = notificationsData.filter(n => !n.read).length;

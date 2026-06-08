@@ -122,7 +122,7 @@ export default function ProfilePage() {
 							Are you absolutely sure you want to permanently delete your account? This will cascade-delete all your assignments, task durations, and user credentials.
 						</DialogDescription>
 					</DialogHeader>
-					<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
+					<DialogFooter className="pt-4 flex gap-2 justify-end">
 						<Button
 							type="button"
 							variant="ghost"

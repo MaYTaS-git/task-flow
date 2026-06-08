@@ -56,6 +56,16 @@ import {
 import { ProjectSettingsForm } from "@/components/forms/project-settings-form";
 import { TaskCreateForm } from "@/components/forms/task-create-form";
 import { ProjectMemberAssignForm } from "@/components/forms/project-member-assign-form";
+import { ProjectMemberCreateAndAssignForm } from "@/components/forms/project-member-create-and-assign-form";
+import {
+	Target,
+	TrendingUp,
+	CheckCircle2,
+	Sparkles,
+	AlertCircle,
+	Clock3,
+	CalendarRange,
+} from "lucide-react";
 
 import {
 	TaskStatusBadge,
@@ -407,6 +417,7 @@ function ProjectDetailsContent() {
 
 	// Modal States
 	const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+	const [showCreateAndAssignModal, setShowCreateAndAssignModal] = useState(false);
 	const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 	const [showEditTaskModal, setShowEditTaskModal] = useState(false);
 	const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
@@ -444,6 +455,13 @@ function ProjectDetailsContent() {
 	const tasks = (tasksQuery.data || []) as Task[];
 	const isTasksLoading = tasksQuery.isLoading;
 	const activeTimer = activeTimerQuery.data as ActiveTimer | null | undefined;
+
+	// Task stats calculation
+	const totalTasksCount = tasks.length;
+	const completedTasksCount = tasks.filter((t) => t.status === "done").length;
+	const inProgressTasksCount = tasks.filter((t) => t.status === "in_progress").length;
+	const backlogTasksCount = tasks.filter((t) => t.status === "backlog" || t.status === "todo").length;
+	const progressPercent = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
 
 	// RBAC
 	const isUserAdmin =
@@ -864,122 +882,246 @@ function ProjectDetailsContent() {
 				</TabsContent>
 
 				{/* ── Members Tab ────────────────────────────────────────────── */}
-				<TabsContent value="members">
-					<div className="max-w-2xl space-y-4">
-						<div className="flex items-center justify-between">
-							<h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-								<Users className="size-4 text-primary" />
-								Project Team
-								<Badge className="bg-muted text-muted-foreground border border-border text-[10px]">
-									{members.length}
-								</Badge>
-							</h2>
+				<TabsContent value="members" className="animate-fade-in outline-none">
+					<div className="space-y-6">
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
+							<div className="space-y-1">
+								<h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+									<Users className="size-5 text-primary" />
+									Project Team
+									<Badge className="bg-primary/10 text-primary border border-primary/20 text-xs font-semibold px-2 py-0.5 rounded-full">
+										{members.length} member{members.length === 1 ? "" : "s"}
+									</Badge>
+								</h2>
+								<p className="text-xs text-muted-foreground font-light">
+									Manage and invite team members collaborating on this project.
+								</p>
+							</div>
 							{isUserAdmin && (
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => setShowAddMemberModal(true)}
-									disabled={unassignedOrgMembers.length === 0}
-								>
-									<UserPlus className="size-3.5 mr-1" />
-									Add Member
-								</Button>
+								<div className="flex items-center gap-2 shrink-0">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => setShowAddMemberModal(true)}
+										disabled={unassignedOrgMembers.length === 0}
+										className="rounded-xl border-border/60 hover:bg-muted/50 transition-all text-xs"
+									>
+										<UserPlus className="size-3.5 mr-1.5" />
+										Assign Member
+									</Button>
+									<Button
+										size="sm"
+										onClick={() => setShowCreateAndAssignModal(true)}
+										className="rounded-xl shadow-md shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all text-xs font-semibold"
+									>
+										<Plus className="size-4 mr-1" />
+										New Member
+									</Button>
+								</div>
 							)}
 						</div>
 
-						<div className="bg-card border border-border rounded-lg divide-y divide-border overflow-hidden">
-							{members.length === 0 ? (
-								<div className="py-10 text-center text-xs text-muted-foreground">
-									No members assigned to this project yet.
+						{members.length === 0 ? (
+							<div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-border/60 rounded-2xl bg-card/20 backdrop-blur-sm space-y-4 max-w-lg mx-auto py-16 animate-fade-in">
+								<div className="p-4 bg-muted/40 rounded-full border border-border/30 text-muted-foreground">
+									<Users className="size-8" />
 								</div>
-							) : (
-								members.map((member) => (
-									<div
-										key={member.id}
-										className="py-3 px-4 flex items-center justify-between gap-4"
-									>
-										<div className="flex items-center gap-3">
-											<MemberAvatar
-												name={member.name}
-												email={member.email}
-												size="sm"
-											/>
-											<div>
-												<div className="text-sm font-semibold text-foreground">
-													{member.name ||
-														"Invite Pending"}
+								<div className="space-y-1">
+									<h3 className="text-sm font-semibold text-foreground">No Members Assigned</h3>
+									<p className="text-xs text-muted-foreground max-w-xs leading-relaxed font-light">
+										There are no members assigned to this project yet. Assign existing workspace members or invite new ones.
+									</p>
+								</div>
+								{isUserAdmin && (
+									<div className="flex items-center gap-2">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => setShowAddMemberModal(true)}
+											disabled={unassignedOrgMembers.length === 0}
+											className="rounded-xl"
+										>
+											Assign Existing
+										</Button>
+										<Button
+											size="sm"
+											onClick={() => setShowCreateAndAssignModal(true)}
+											className="rounded-xl"
+										>
+											Invite New
+										</Button>
+									</div>
+								)}
+							</div>
+						) : (
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								{members.map((member) => {
+									const memberTasks = tasks.filter((t) =>
+										t.assignees?.some((a) => a.id === member.id)
+									);
+									const completedTasks = memberTasks.filter((t) => t.status === "done").length;
+									const activeTasks = memberTasks.length - completedTasks;
+
+									return (
+										<div
+											key={member.id}
+											className="group bg-card/30 hover:bg-card/70 backdrop-blur-md border border-border/40 hover:border-primary/25 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1"
+										>
+											<div className="flex items-start justify-between gap-3">
+												<div className="flex items-center gap-3 min-w-0">
+													<MemberAvatar
+														name={member.name}
+														email={member.email}
+														image={member.image}
+														size="default"
+														className="ring-2 ring-primary/10 group-hover:ring-primary/25 transition-all duration-300"
+													/>
+													<div className="min-w-0">
+														<div className="text-sm font-bold text-foreground truncate">
+															{member.name || "Invite Pending"}
+														</div>
+														<div className="text-[11px] text-muted-foreground truncate font-medium">
+															{member.email}
+														</div>
+													</div>
 												</div>
-												<div className="text-xs text-muted-foreground">
-													{member.email}
-												</div>
-											</div>
-										</div>
-										<div className="flex items-center gap-2">
-											<Badge className="bg-muted text-muted-foreground border border-border text-[10px] uppercase">
-												{member.role}
-											</Badge>
-											{isUserAdmin &&
-												member.id !== activeOrg?.id && (
+												{isUserAdmin && member.id !== activeOrg?.id && (
 													<Button
 														variant="ghost"
-														size="icon-sm"
+														size="icon-xs"
 														onClick={() =>
 															setMemberToRemove({
 																id: member.id,
-																nameOrEmail:
-																	member.name ||
-																	member.email,
+																nameOrEmail: member.name || member.email,
 															})
 														}
 														title="Remove Member"
+														className="size-7 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all duration-200"
 													>
-														<Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />
+														<Trash2 className="size-3.5" />
 													</Button>
 												)}
+											</div>
+
+											<div className="border-t border-border/30 my-3.5" />
+
+											<div className="flex items-center justify-between gap-2">
+												<Badge className="bg-muted text-muted-foreground border border-border/40 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md">
+													{member.role}
+												</Badge>
+												<div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-semibold">
+													<Target className="size-3.5 text-primary/60" />
+													<span>
+														{activeTasks} Active / {completedTasks} Done
+													</span>
+												</div>
+											</div>
 										</div>
-									</div>
-								))
-							)}
-						</div>
+									);
+								})}
+							</div>
+						)}
 					</div>
 				</TabsContent>
 
 				{/* ── Details Tab ─────────────────────────────────────────────── */}
-				<TabsContent value="details">
-					<div className="max-w-2xl space-y-6">
-						{/* Project meta */}
-						<div className="p-5 bg-card border border-border rounded-lg space-y-3">
-							<div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-								Project Description
-							</div>
-							<p className="text-sm text-foreground leading-relaxed">
-								{project.description ||
-									"No description provided."}
-							</p>
-							<div className="text-[10px] text-muted-foreground font-mono flex items-center gap-1.5 pt-2 border-t border-border">
-								<Calendar className="size-3.5" />
-								Created on{" "}
-								{new Date(
-									project.createdAt,
-								).toLocaleDateString()}
+				<TabsContent value="details" className="animate-fade-in outline-none">
+					<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+						{/* Main Details & Stats Dashboard */}
+						<div className="lg:col-span-2 space-y-6">
+							{/* Project Overview */}
+							<div className="bg-card/30 backdrop-blur-md border border-border/40 rounded-2xl p-5 shadow-sm space-y-5">
+								<div className="flex items-center justify-between border-b border-border/30 pb-3">
+									<h3 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-2">
+										<Target className="size-4 text-primary animate-pulse" />
+										Project Dashboard
+									</h3>
+									<Badge variant="outline" className="border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/5 text-primary uppercase">
+										{project.status}
+									</Badge>
+								</div>
+
+								{/* Analytics Grid */}
+								<div className="grid grid-cols-3 gap-3">
+									<div className="p-3 bg-muted/10 border border-border/40 rounded-xl space-y-1">
+										<div className="flex items-center justify-between">
+											<span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Tasks</span>
+											<Target className="size-3.5 text-primary/70" />
+										</div>
+										<div className="text-xl font-bold text-foreground">{totalTasksCount}</div>
+									</div>
+									<div className="p-3 bg-muted/10 border border-border/40 rounded-xl space-y-1">
+										<div className="flex items-center justify-between">
+											<span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Active</span>
+											<TrendingUp className="size-3.5 text-amber-500/70" />
+										</div>
+										<div className="text-xl font-bold text-foreground">{inProgressTasksCount + backlogTasksCount}</div>
+									</div>
+									<div className="p-3 bg-muted/10 border border-border/40 rounded-xl space-y-1">
+										<div className="flex items-center justify-between">
+											<span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Done</span>
+											<CheckCircle2 className="size-3.5 text-emerald-500/70" />
+										</div>
+										<div className="text-xl font-bold text-foreground">{completedTasksCount}</div>
+									</div>
+								</div>
+
+								{/* Completion Progress Bar */}
+								<div className="space-y-2">
+									<div className="flex justify-between text-xs font-semibold text-muted-foreground px-1">
+										<span>Task Completion</span>
+										<span className="text-foreground">{progressPercent}%</span>
+									</div>
+									<div className="h-2 w-full bg-muted/30 border border-border/30 rounded-full overflow-hidden">
+										<div
+											className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full transition-all duration-500 ease-out"
+											style={{ width: `${progressPercent}%` }}
+										/>
+									</div>
+								</div>
+
+								{/* Description Container */}
+								<div className="space-y-2 pt-2">
+									<div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+										Project Description
+									</div>
+									<p className="text-xs text-foreground leading-relaxed bg-muted/15 border border-border/30 rounded-xl p-3.5 font-light">
+										{project.description || "No description provided for this project."}
+									</p>
+								</div>
+
+								{/* Footer Meta */}
+								<div className="flex flex-wrap gap-4 text-[10px] text-muted-foreground font-mono pt-3 border-t border-border/30">
+									<div className="flex items-center gap-1.5">
+										<CalendarRange className="size-3.5 text-muted-foreground/80" />
+										<span>Created: {new Date(project.createdAt).toLocaleDateString()}</span>
+									</div>
+									<div className="flex items-center gap-1.5 ml-auto">
+										<Clock3 className="size-3.5 text-muted-foreground/80" />
+										<span>Time Logged: {formatDuration(timerSeconds)}</span>
+									</div>
+								</div>
 							</div>
 						</div>
 
-						{/* Settings form */}
+						{/* Settings column */}
 						{canEditProject && (
-							<div className="p-5 bg-card border border-border rounded-lg">
-								<div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-4">
-									Project Settings
+							<div className="bg-card/30 backdrop-blur-md border border-border/40 rounded-2xl p-5 shadow-sm space-y-4">
+								<div className="border-b border-border/30 pb-3">
+									<h3 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-2">
+										<Settings className="size-4 text-primary" />
+										Project Settings
+									</h3>
+									<p className="text-[11px] text-muted-foreground font-light mt-0.5">
+										Modify project metadata, status, and naming configuration.
+									</p>
 								</div>
 								<ProjectSettingsForm
 									projectId={projectId}
 									initialName={project.name}
-									initialDescription={
-										project.description || ""
-									}
+									initialDescription={project.description || ""}
 									initialStatus={project.status}
 									onSuccess={() => {}}
-									onCancel={() => {}}
 								/>
 							</div>
 						)}
@@ -1010,6 +1152,21 @@ function ProjectDetailsContent() {
 					unassignedMembers={unassignedOrgMembers}
 					onSuccess={() => setShowAddMemberModal(false)}
 					onCancel={() => setShowAddMemberModal(false)}
+				/>
+			</Dialog>
+
+			{/* ── Create & Assign Member Modal ────────────────────────────── */}
+			<Dialog
+				open={showCreateAndAssignModal}
+				onOpenChange={setShowCreateAndAssignModal}
+			>
+				<ProjectMemberCreateAndAssignForm
+					projectId={projectId}
+					onSuccess={() => {
+						setShowCreateAndAssignModal(false);
+						projectDetailsQuery.refetch();
+					}}
+					onCancel={() => setShowCreateAndAssignModal(false)}
 				/>
 			</Dialog>
 
@@ -1114,7 +1271,7 @@ function ProjectDetailsContent() {
 							action cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
-					<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
+					<DialogFooter className="pt-4 flex gap-2 justify-end">
 						<Button
 							variant="ghost"
 							onClick={() => setShowDeleteTaskConfirm(false)}

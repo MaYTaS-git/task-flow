@@ -33,6 +33,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface TaskData {
 	id: number;
@@ -310,68 +311,71 @@ export default function Dashboard() {
 						</Button>
 					)}
 				</div>
-				<div className="border border-border rounded-lg overflow-hidden">
-					<Table>
-						<TableHeader className="bg-muted/30">
-							<TableRow className="hover:bg-transparent">
-								<TableHead className="w-12"></TableHead>
-								<TableHead className="text-[10px] uppercase font-bold tracking-wider">Project Name</TableHead>
-								<TableHead className="text-[10px] uppercase font-bold tracking-wider">Tasks</TableHead>
-								<TableHead className="w-[300px] text-[10px] uppercase font-bold tracking-wider">Progress</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{isProjectsLoading ? (
-								<TableRow>
-									<TableCell colSpan={4} className="h-32 text-center text-xs text-muted-foreground font-light">
-										Loading projects...
-									</TableCell>
+				<ScrollArea className="flex-1 w-full border border-border rounded-lg">
+					<div className="min-w-[600px]">
+						<Table>
+							<TableHeader className="bg-muted/30">
+								<TableRow className="hover:bg-transparent">
+									<TableHead className="w-12"></TableHead>
+									<TableHead className="text-[10px] uppercase font-bold tracking-wider">Project Name</TableHead>
+									<TableHead className="text-[10px] uppercase font-bold tracking-wider">Tasks</TableHead>
+									<TableHead className="w-[300px] text-[10px] uppercase font-bold tracking-wider">Progress</TableHead>
 								</TableRow>
-							) : projectsWithProgress.length === 0 ? (
-								<TableRow>
-									<TableCell colSpan={4} className="h-32 text-center text-xs text-muted-foreground font-light">
-										No projects created yet.
-									</TableCell>
-								</TableRow>
-							) : (
-								projectsWithProgress.map((proj) => (
-									<TableRow 
-										key={proj.id}
-										className="cursor-pointer group"
-										onClick={() => router.push(`/portal/projects/view?id=${proj.id}`)}
-									>
-										<TableCell>
-											<div className="p-2 bg-muted group-hover:bg-primary/10 rounded-md border border-border text-muted-foreground group-hover:text-primary transition-colors">
-												<FolderGit2 className="size-4" />
-											</div>
-										</TableCell>
-										<TableCell>
-											<span className="text-sm font-bold group-hover:text-primary transition-colors">
-												{proj.name}
-											</span>
-										</TableCell>
-										<TableCell>
-											<span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-												{proj.tasksCount} total
-											</span>
-										</TableCell>
-										<TableCell>
-											<div className="flex items-center gap-3">
-												<Progress 
-													value={proj.progress} 
-													className="h-2 flex-1"
-												/>
-												<span className="text-xs font-black w-8 text-right">
-													{proj.progress}%
-												</span>
-											</div>
+							</TableHeader>
+							<TableBody>
+								{isProjectsLoading ? (
+									<TableRow>
+										<TableCell colSpan={4} className="h-32 text-center text-xs text-muted-foreground font-light">
+											Loading projects...
 										</TableCell>
 									</TableRow>
-								))
-							)}
-						</TableBody>
-					</Table>
-				</div>
+								) : projectsWithProgress.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={4} className="h-32 text-center text-xs text-muted-foreground font-light">
+											No projects created yet.
+										</TableCell>
+									</TableRow>
+								) : (
+									projectsWithProgress.map((proj) => (
+										<TableRow 
+											key={proj.id}
+											className="cursor-pointer group"
+											onClick={() => router.push(`/portal/projects/view?id=${proj.id}`)}
+										>
+											<TableCell>
+												<div className="p-2 bg-muted group-hover:bg-primary/10 rounded-md border border-border text-muted-foreground group-hover:text-primary transition-colors">
+													<FolderGit2 className="size-4" />
+												</div>
+											</TableCell>
+											<TableCell>
+												<span className="text-sm font-bold group-hover:text-primary transition-colors">
+													{proj.name}
+												</span>
+											</TableCell>
+											<TableCell>
+												<span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+													{proj.tasksCount} total
+												</span>
+											</TableCell>
+											<TableCell>
+												<div className="flex items-center gap-3">
+													<Progress 
+														value={proj.progress} 
+														className="h-2 flex-1"
+													/>
+													<span className="text-xs font-black w-8 text-right">
+														{proj.progress}%
+													</span>
+												</div>
+											</TableCell>
+										</TableRow>
+									))
+								)}
+							</TableBody>
+						</Table>
+					</div>
+					<ScrollBar orientation="horizontal" />
+				</ScrollArea>
 			</div>
 
 			{/* Create Project Modal */}

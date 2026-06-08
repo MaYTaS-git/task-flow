@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProjectSettingsFormProps {
@@ -148,18 +147,20 @@ export function ProjectSettingsForm({
 				</div>
 			</div>
 
-			<DialogFooter className="pt-6 border-t border-border flex gap-2 justify-end">
-				<Button
-					type="button"
-					variant="ghost"
-					onClick={onCancel}
-					className="text-muted-foreground hover:text-foreground rounded-lg px-6"
-				>
-					Cancel
-				</Button>
+			<div className="pt-6 border-t border-border flex items-center justify-end gap-3">
+				{onCancel && (
+					<Button
+						type="button"
+						variant="ghost"
+						onClick={onCancel}
+						className="text-muted-foreground hover:text-foreground rounded-lg px-6"
+					>
+						Cancel
+					</Button>
+				)}
 				<Button
 					type="submit"
-					className="rounded-lg px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+					className="rounded-lg px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all font-semibold"
 					disabled={updateProjectMutation.isPending || !isValid}
 				>
 					{updateProjectMutation.isPending ? (
@@ -168,7 +169,7 @@ export function ProjectSettingsForm({
 						"Save Changes"
 					)}
 				</Button>
-			</DialogFooter>
+			</div>
 		</form>
 	);
 }

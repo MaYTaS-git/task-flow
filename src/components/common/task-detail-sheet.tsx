@@ -462,7 +462,7 @@ export function TaskDetailSheet({
 											Are you sure you want to delete this task? This action cannot be undone.
 										</DialogDescription>
 									</DialogHeader>
-									<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
+									<DialogFooter className="pt-4 flex gap-2 justify-end">
 										<Button
 											variant="ghost"
 											onClick={() => setShowDeleteConfirm(false)}

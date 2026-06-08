@@ -14,7 +14,11 @@ const globalForDb = globalThis as unknown as {
 	conn: postgres.Sql | undefined;
 };
 
-export const sql = globalForDb.conn || postgres(serverEnv.DATABASE_URL);
+export const sql =
+	globalForDb.conn ||
+	postgres(serverEnv.DATABASE_URL, {
+		max: process.env.NODE_ENV === "production" ? 1 : undefined,
+	});
 if (process.env.NODE_ENV !== "production") globalForDb.conn = sql;
 
 export const db = drizzle(sql);

@@ -139,6 +139,21 @@ export const projectRoutes = new Elysia({ prefix: "/projects" })
 					}
 				}
 
+				if (user.role !== "SUPER_ADMIN") {
+					const existingProjects = await db
+						.select()
+						.from(projects)
+						.where(eq(projects.organizationId, orgId));
+					if (existingProjects.length >= 3) {
+						set.status = 400;
+						return {
+							success: false,
+							error: "Limit reached: An organization can have up to 3 projects",
+							message: "Limit reached: An organization can have up to 3 projects",
+						};
+					}
+				}
+
 				// Insert project
 				const [project] = await db
 					.insert(projects)

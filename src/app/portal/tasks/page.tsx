@@ -45,6 +45,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface Task {
 	id: number;
@@ -131,6 +132,47 @@ export default function TasksPage() {
 	const tasks = React.useMemo(() => (tasksQuery.data || []) as Task[], [tasksQuery.data]);
 	const isTasksLoading = tasksQuery.isLoading;
 	const activeTimer = activeTimerQuery.data;
+
+	const [visibleLimit, setVisibleLimit] = useState(15);
+	const visibleTasks = React.useMemo(() => tasks.slice(0, visibleLimit), [tasks, visibleLimit]);
+
+	// Reset limit on filter changes (derived state update during render to avoid cascading renders)
+	const [prevFilters, setPrevFilters] = useState({ filterProjId, filterStatus, filterPriority, filterAssigneeId });
+	if (
+		prevFilters.filterProjId !== filterProjId ||
+		prevFilters.filterStatus !== filterStatus ||
+		prevFilters.filterPriority !== filterPriority ||
+		prevFilters.filterAssigneeId !== filterAssigneeId
+	) {
+		setPrevFilters({ filterProjId, filterStatus, filterPriority, filterAssigneeId });
+		setVisibleLimit(15);
+	}
+
+	const loadMoreRef = React.useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (visibleLimit >= tasks.length) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					setVisibleLimit((prev) => Math.min(prev + 15, tasks.length));
+				}
+			},
+			{ threshold: 0.1 }
+		);
+
+		const currentRef = loadMoreRef.current;
+		if (currentRef) {
+			observer.observe(currentRef);
+		}
+
+		return () => {
+			if (currentRef) {
+				observer.unobserve(currentRef);
+			}
+		};
+	}, [tasks.length, visibleLimit]);
 
 	// Timer Ticker
 	const [now, setNow] = useState<number>(0);
@@ -355,7 +397,8 @@ export default function TasksPage() {
 						</div>
 					</div>
 				) : (
-					<div className="border border-border bg-card/65 backdrop-blur-lg rounded-lg overflow-hidden animate-fade-in-up">
+					<ScrollArea className="w-full border border-border bg-card/65 backdrop-blur-lg rounded-lg animate-fade-in-up">
+						<div className="min-w-[800px]">
 							<Table>
 								<TableHeader className="bg-muted/30">
 									<TableRow className="hover:bg-transparent">
@@ -368,7 +411,7 @@ export default function TasksPage() {
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{tasks.map((task) => (
+									{visibleTasks.map((task) => (
 										<TableRow 
 											key={task.id}
 											className="cursor-pointer group"
@@ -470,7 +513,25 @@ export default function TasksPage() {
 									))}
 								</TableBody>
 							</Table>
-					</div>
+						</div>
+
+						{/* Infinite scroll boundary trigger */}
+						{visibleLimit < tasks.length && (
+							<div ref={loadMoreRef} className="py-6 flex justify-center items-center border-t border-border/40">
+								<div className="flex items-center gap-2 text-xs text-muted-foreground font-light">
+									<span className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+									<span>Loading more tasks...</span>
+								</div>
+							</div>
+						)}
+
+						{visibleLimit >= tasks.length && tasks.length > 0 && (
+							<div className="py-6 text-center text-xs text-muted-foreground/60 font-light border-t border-border/40">
+								All tasks loaded.
+							</div>
+						)}
+						<ScrollBar orientation="horizontal" />
+					</ScrollArea>
 				)}
 			</div>
 
@@ -533,7 +594,7 @@ export default function TasksPage() {
 							Are you sure you want to delete this task? This action cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
-					<DialogFooter className="pt-4 border-t border-border flex gap-2 justify-end">
+					<DialogFooter className="pt-4 flex gap-2 justify-end">
 						<Button
 							variant="ghost"
 							onClick={() => setTaskToDelete(null)}
